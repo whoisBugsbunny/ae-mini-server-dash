@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ae-mini-server</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            color-scheme: light dark;
+            --bg: #f3f4f6;
+            --text: #1f2937;
+            --subtext: #6b7280;
+            --card: #ffffff;
+            --border: #e5e7eb;
+            --link: #3b82f6;
+            --link-hover: #2563eb;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #111827;
+                --text: #f9fafb;
+                --subtext: #9ca3af;
+                --card: #1f2937;
+                --border: #374151;
+                --link: #60a5fa;
+                --link-hover: #3b82f6;
+            }
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Roboto', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 1.5rem;
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            padding: 2.5rem;
+            border-radius: 1.5rem;
+            background: var(--card);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .header {
+            margin-bottom: 2rem;
+        }
+
+        .header-icon {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 2.25rem;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: var(--subtext);
+            margin-top: 0.5rem;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+            text-align: left;
+        }
+
+        .stat-card {
+            padding: 1rem;
+            border-radius: 0.75rem;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+        }
+
+        .stat-card strong {
+            font-weight: 700;
+            flex-shrink: 0;
+            min-width: 80px;
+        }
+
+        .stat-card span {
+            word-break: break-all;
+            margin-left: 0.5rem;
+        }
+
+        .service-links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .service-links li a {
+            display: block;
+            padding: 0.75rem;
+            background-color: var(--link);
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 0.5rem;
+            font-weight: 700;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        .service-links li a:hover {
+            background-color: var(--link-hover);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-icon">📱</div>
+            <h1>ae-mini-server</h1>
+            <p class="subtitle">A quick overview of your home server's status.</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <strong>Status:</strong>
+                <span>Online ✅</span>
+            </div>
+            <div class="stat-card">
+                <strong>Local IP:</strong>
+                <span>192.168.1.123</span>
+            </div>
+            <div class="stat-card">
+                <strong>Server Time:</strong>
+                <span id="time"></span>
+            </div>
+            <div class="stat-card">
+                <strong>Public IP:</strong>
+                <span id="ip">Fetching...</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateTime() {
+            document.getElementById("time")
+                .textContent = new Date()
+                .toLocaleString();
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        fetch("https://api.ipify.org?format=json")
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById("ip")
+                    .textContent = data.ip;
+            })
+            .catch(() => {
+                document.getElementById("ip")
+                    .textContent = "Unavailable";
+            });
+    </script>
+</body>
+
+</html>
