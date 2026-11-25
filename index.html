@@ -225,6 +225,87 @@
             font-weight: 600;
         }
 
+        /* Lucide icons */
+        svg.icon,
+        .label svg,
+        h2 svg,
+        .chart-toggle svg {
+            width: 15px;
+            height: 15px;
+            flex-shrink: 0;
+            stroke-width: 1.9;
+        }
+
+        .label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .label svg {
+            opacity: .85;
+        }
+
+        h2 svg {
+            margin-right: -4px;
+        }
+
+        .svc-icon {
+            position: relative;
+            display: grid;
+            place-items: center;
+            width: 38px;
+            height: 38px;
+            flex-shrink: 0;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--inset);
+            color: var(--accent);
+        }
+
+        .svc-icon svg.icon {
+            width: 19px;
+            height: 19px;
+        }
+
+        /* status dot sits on the icon's corner */
+        .svc-icon .dot {
+            position: absolute;
+            right: -3px;
+            bottom: -3px;
+            border: 2px solid var(--card);
+            box-sizing: content-box;
+        }
+
+        .svc.is-down .svc-icon {
+            color: var(--sub);
+        }
+
+        .svc-text {
+            min-width: 0;
+        }
+
+        .version {
+            display: inline-block;
+            margin-top: 5px;
+            padding: 1px 7px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            color: var(--sub);
+            font: .68rem/1.5 ui-monospace, "Cascadia Mono", Consolas, monospace;
+            overflow-wrap: anywhere;
+        }
+
+        .bot-tab b {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .bot-tab b svg.icon {
+            color: var(--accent);
+        }
+
         .svc .meta {
             margin-left: auto;
             text-align: right;
@@ -768,45 +849,45 @@
             <div class="pill"><span class="dot" id="status-dot"></span><span id="status-text">Connecting…</span></div>
         </header>
 
-        <h2>Server</h2>
+        <h2><i data-lucide="server"></i>Server</h2>
         <div class="grid">
             <div class="card">
-                <div class="label">Uptime</div>
+                <div class="label"><i data-lucide="clock"></i>Uptime</div>
                 <div class="value" id="uptime">–</div>
                 <div class="small" id="procs"></div>
             </div>
             <div class="card">
-                <div class="label">CPU load (1 min)</div>
+                <div class="label"><i data-lucide="cpu"></i>CPU load (1 min)</div>
                 <div class="value" id="load1">–</div>
                 <div class="bar" id="load-bar"><div></div></div>
                 <div class="small" id="load-more"></div>
             </div>
             <div class="card">
-                <div class="label">Memory</div>
+                <div class="label"><i data-lucide="memory-stick"></i>Memory</div>
                 <div class="value" id="mem">–</div>
                 <div class="bar" id="mem-bar"><div></div></div>
                 <div class="small" id="swap"></div>
             </div>
             <div class="card">
-                <div class="label">Storage</div>
+                <div class="label"><i data-lucide="hard-drive"></i>Storage</div>
                 <div class="value" id="disk">–</div>
                 <div class="bar" id="disk-bar"><div></div></div>
                 <div class="small" id="disk-free"></div>
             </div>
             <div class="card">
-                <div class="label">Temperature</div>
+                <div class="label"><i data-lucide="thermometer"></i>Temperature</div>
                 <div class="value" id="temp-cpu">–</div>
                 <div class="small" id="temp-more"></div>
             </div>
             <div class="card">
-                <div class="label">Network</div>
+                <div class="label"><i data-lucide="wifi"></i>Network</div>
                 <div class="value" id="ip">–</div>
                 <div class="small" id="clock"></div>
             </div>
             <div class="card qr-card">
                 <div class="qr" id="qr" role="img" aria-label="QR code for the dashboard address"></div>
                 <div class="qr-info">
-                    <div class="label">Open on another device</div>
+                    <div class="label"><i data-lucide="qr-code"></i>Open on another device</div>
                     <div class="value" id="qr-url">–</div>
                     <div class="small">Scan with a phone on the same Wi-Fi / hotspot.</div>
                     <code id="qr-ssh"></code>
@@ -814,10 +895,10 @@
             </div>
         </div>
 
-        <h2>Services</h2>
+        <h2><i data-lucide="layers"></i>Services</h2>
         <div class="services" id="services"></div>
 
-        <h2>Bots</h2>
+        <h2><i data-lucide="bot"></i>Bots</h2>
         <div class="card" id="bot">
             <div class="bot-tabs" id="bot-tabs" role="tablist" aria-label="Bots"></div>
             <div class="bot-head">
@@ -835,19 +916,19 @@
 
             <div class="kpis">
                 <div class="kpi">
-                    <div class="label">Equity</div>
+                    <div class="label"><i data-lucide="wallet"></i>Equity</div>
                     <div class="value" id="bot-equity">–</div>
                 </div>
                 <div class="kpi">
-                    <div class="label">Profit / loss</div>
+                    <div class="label"><i data-lucide="trending-up"></i>Profit / loss</div>
                     <div class="value" id="bot-pnl">–</div>
                 </div>
                 <div class="kpi">
-                    <div class="label">Holding</div>
+                    <div class="label"><i data-lucide="coins"></i>Holding</div>
                     <div class="value" id="bot-position">–</div>
                 </div>
                 <div class="kpi">
-                    <div class="label">Trades</div>
+                    <div class="label"><i data-lucide="arrow-left-right"></i>Trades</div>
                     <div class="value" id="bot-trades">–</div>
                 </div>
             </div>
@@ -874,12 +955,12 @@
             </div>
             <div class="chart-hint">Zoom: tap the magnifier at the top right of the chart and drag a box. Drag the chart to pan, pinch or Shift+scroll to zoom, or use the slider.</div>
 
-            <h2>Order book · live</h2>
+            <h2><i data-lucide="book-open"></i>Order book · live</h2>
             <div class="book-kpis">
-                <div class="kpi"><div class="label">Best bid (buyers)</div><div class="value good-text" id="book-bid">–</div></div>
-                <div class="kpi"><div class="label">Best ask (sellers)</div><div class="value bad-text" id="book-ask">–</div></div>
-                <div class="kpi"><div class="label">Spread</div><div class="value" id="book-spread">–</div></div>
-                <div class="kpi"><div class="label">Volume, last 60 min</div><div class="value" id="vol-hour">–</div></div>
+                <div class="kpi"><div class="label"><i data-lucide="trending-up"></i>Best bid (buyers)</div><div class="value good-text" id="book-bid">–</div></div>
+                <div class="kpi"><div class="label"><i data-lucide="trending-down"></i>Best ask (sellers)</div><div class="value bad-text" id="book-ask">–</div></div>
+                <div class="kpi"><div class="label"><i data-lucide="arrow-down-up"></i>Spread</div><div class="value" id="book-spread">–</div></div>
+                <div class="kpi"><div class="label"><i data-lucide="chart-column"></i>Volume, last 60 min</div><div class="value" id="vol-hour">–</div></div>
             </div>
             <div class="pressure">
                 <div class="pressure-bar" aria-hidden="true"><div id="pressure-bid"></div></div>
@@ -897,7 +978,7 @@
             </div>
             <div class="small" id="book-source"></div>
 
-            <h2>Trades: each buy with its sell</h2>
+            <h2><i data-lucide="arrow-left-right"></i>Trades: each buy with its sell</h2>
             <div class="trip-summary" id="trip-summary"></div>
             <div class="table-wrap">
                 <table>
@@ -918,20 +999,23 @@
         <footer>Self-hosted on an old phone · refreshes automatically</footer>
     </div>
 
-    <script src="assets/dashboard.bundle.js?v=86069d2f23"></script>
+    <script src="assets/dashboard.bundle.js?v=58d5147593"></script>
     <script>
         const $ = (id) => document.getElementById(id);
         let lastStatsOk = 0;
 
-        const SERVICE_NAMES = {
-            "sshd": "SSH",
-            "nginx": "Web server",
-            "ae-api": "Dashboard API",
-            "ae-bot-paper-sma": "SMA bot",
-            "ae-bot-flow": "Flow bot",
-            "ae-market": "Market data",
-            "ssh-agent": "SSH agent",
+        // Friendly name + Lucide icon for each service (unknown services get a generic box icon).
+        const SERVICES = {
+            "sshd": ["SSH", "square-terminal"],
+            "nginx": ["Web server", "globe"],
+            "ae-api": ["Dashboard API", "server-cog"],
+            "ae-bot-paper-sma": ["SMA bot", "chart-line"],
+            "ae-bot-flow": ["Flow bot", "waves"],
+            "ae-market": ["Market data", "chart-candlestick"],
+            "ssh-agent": ["SSH agent", "key-round"],
         };
+        const BOT_ICONS = { "paper-sma": "chart-line", "paper-flow": "waves" };
+        const icon = (name, cls) => window.dashboardIcon ? window.dashboardIcon(name, cls) : document.createTextNode("");
 
         // Which bot the Bots section shows; remembered per browser (storage can be blocked, so guard it).
         // A link like ?bot=paper-flow opens that bot directly.
@@ -1071,11 +1155,15 @@
             for (const svc of list) {
                 const up = svc.state === "run";
                 const off = !up && svc.enabled === false;
-                const card = el("div", { class: "card svc" });
-                card.append(el("span", { class: "dot " + (up ? "good" : off ? "" : "bad") }));
-                const name = el("div");
-                name.append(el("div", { class: "name" }, SERVICE_NAMES[svc.name] || svc.name));
+                const [label, iconName] = SERVICES[svc.name] || [svc.name, "box"];
+                const card = el("div", { class: "card svc" + (up ? "" : " is-down") });
+                const tile = el("span", { class: "svc-icon" });
+                tile.append(icon(iconName, "icon"), el("span", { class: "dot " + (up ? "good" : off ? "" : "bad") }));
+                card.append(tile);
+                const name = el("div", { class: "svc-text" });
+                name.append(el("div", { class: "name" }, label));
                 name.append(el("div", { class: "small" }, svc.name));
+                if (svc.version) name.append(el("span", { class: "version" }, svc.version));
                 card.append(name);
                 const meta = el("div", { class: "meta small" });
                 meta.append(el("div", {}, up ? "up " + fmtDuration(svc.since_s) : off ? "off" : "down " + fmtDuration(svc.since_s)));
@@ -1099,7 +1187,9 @@
             for (const b of bots) {
                 const s = b.state;
                 const tab = el("button", { class: "bot-tab", type: "button", role: "tab", "aria-selected": String(b.bot === selectedBot) });
-                tab.append(el("b", {}, s.title || "SMA bot"));
+                const title = el("b");
+                title.append(icon(BOT_ICONS[b.bot] || "bot", "icon"), document.createTextNode(s.title || "SMA bot"));
+                tab.append(title);
                 const pnl = s.pnl_pct == null ? "" : ` · ${(s.pnl_pct >= 0 ? "+" : "") + s.pnl_pct.toFixed(2)}%`;
                 tab.append(el("span", {}, `${s.qty > 0 ? "holding " + s.base : "in cash"} · ${s.trades} trades${pnl}`));
                 tab.addEventListener("click", () => selectBot(b.bot));

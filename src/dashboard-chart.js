@@ -4,7 +4,7 @@ import {
     DataZoomComponent, GraphicComponent, GridComponent, MarkLineComponent, ToolboxComponent, TooltipComponent,
 } from "echarts/components";
 import { CanvasRenderer } from "echarts/renderers";
-import { Activity, CircleDot, Crosshair, createIcons } from "lucide";
+import "./icons.js";
 import "./qr.js";
 
 echarts.use([
@@ -424,7 +424,6 @@ function init() {
     chart.on("datazoom", () => {
         if (!applyingZoom) userZoomed = true;
     });
-    createIcons({ icons: { Activity, CircleDot, Crosshair } });
     document.getElementById("chart-controls").addEventListener("click", event => {
         const rangeButton = event.target.closest("[data-range]");
         if (rangeButton) return setRange(rangeButton.dataset.range);
