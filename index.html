@@ -863,6 +863,14 @@
             border-top: 2px solid var(--accent);
         }
 
+        .equity-legend i.idle {
+            border-top: 2px solid color-mix(in srgb, var(--sub) 45%, transparent);
+        }
+
+        .equity-head .chart-toggle {
+            margin-right: auto;
+        }
+
         .equity-legend i.nofee {
             border-top: 2px dashed var(--slow);
         }
@@ -1834,6 +1842,10 @@
             <div class="equity-box">
                 <div class="equity-head">
                     <div class="chart-title">Money since start</div>
+                    <button class="chart-toggle" type="button" id="equity-hide-cash" aria-pressed="false"
+                        title="Hide the time the bot was in cash (grey) and join the invested parts">
+                        <i data-lucide="eye-off" aria-hidden="true"></i><span>Hide cash time</span>
+                    </button>
                     <div class="equity-legend" id="equity-legend"></div>
                 </div>
                 <div class="equity-chart" id="equity-chart" role="img" aria-label="The bot's money over time, after fees and before fees"></div>
@@ -1954,7 +1966,7 @@
         </div>
     </dialog>
 
-    <script src="assets/dashboard.bundle.js?v=10d064975e"></script>
+    <script src="assets/dashboard.bundle.js?v=7bc5d303cd"></script>
     <script>
         const $ = (id) => document.getElementById(id);
         let lastStatsOk = 0;
@@ -2713,10 +2725,21 @@
         }
 
         // "Money since start": legend numbers here, the small chart in dashboard-chart.js.
+        // "Hide cash time" is remembered per browser (storage can be blocked, so guard it).
+        let equityHideCash = (() => { try { return localStorage.getItem("ae-equity-hide-cash") === "1"; } catch (e) { return false; } })();
+        let lastEquity = null;
+        $("equity-hide-cash").setAttribute("aria-pressed", String(equityHideCash));
+        $("equity-hide-cash").addEventListener("click", (e) => {
+            equityHideCash = !equityHideCash;
+            e.currentTarget.setAttribute("aria-pressed", String(equityHideCash));
+            try { localStorage.setItem("ae-equity-hide-cash", equityHideCash ? "1" : "0"); } catch (err) { /* not essential */ }
+            if (lastEquity) renderEquity(...lastEquity);
+        });
         function renderEquity(points, start) {
+            lastEquity = [points, start];
             const legend = $("equity-legend");
             legend.replaceChildren();
-            window.dashboardChart?.updateEquity(points, start);
+            window.dashboardChart?.updateEquity(points, start, equityHideCash);
             if (!points.length) return;
             const [, withFees, noFees] = points[points.length - 1];
             const pctOf = (v) => signedPct((v / start - 1) * 100);
@@ -2728,7 +2751,9 @@
             };
             const feeCost = el("span", {});
             feeCost.append(document.createTextNode("Fees cost "), el("b", {}, usd(Math.max(0, noFees - withFees))));
-            legend.append(item("", "After fees", withFees), item("nofee", "Before fees", noFees), feeCost);
+            const idle = el("span", {});
+            idle.append(el("i", { class: "idle" }), document.createTextNode("In cash"));
+            legend.append(item("", "After fees", withFees), item("nofee", "Before fees", noFees), feeCost, idle);
         }
 
         function drawChart(points, trades, fastN, slowN, trips) {
