@@ -474,6 +474,114 @@
             color: var(--accent);
         }
 
+        /* Group card (e.g. Trading bots) with a small card per bot */
+        .svc-group {
+            grid-column: 1 / -1;
+        }
+
+        .group-head {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px 12px;
+            margin-bottom: 12px;
+        }
+
+        .group-head .label {
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .group-head .label svg.icon {
+            color: var(--accent);
+        }
+
+        .bot-cards {
+            display: grid;
+            gap: 8px;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        }
+
+        .bot-card {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 0;
+            padding: 11px 12px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            background: var(--inset);
+            color: var(--text);
+            font: inherit;
+            text-align: left;
+            cursor: pointer;
+            transition: border-color .15s;
+        }
+
+        .bot-card:hover,
+        .bot-card:focus-visible {
+            border-color: var(--sub);
+            outline: none;
+        }
+
+        .bot-card.is-selected {
+            border-color: var(--accent);
+        }
+
+        .bot-card.is-down .svc-icon {
+            color: var(--sub);
+        }
+
+        .bc-head {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .bc-head .svc-icon {
+            width: 32px;
+            height: 32px;
+        }
+
+        .bc-head .svc-icon svg.icon {
+            width: 16px;
+            height: 16px;
+        }
+
+        .bc-head .svc-icon .dot {
+            border-color: var(--inset);
+        }
+
+        .bot-card .name {
+            font-weight: 600;
+        }
+
+        .bc-result {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            font-size: .8rem;
+            color: var(--sub);
+        }
+
+        .bc-result b {
+            font-size: 1.05rem;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .bc-meta {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 4px 8px;
+        }
+
+        .bc-meta .version {
+            margin-top: 0;
+        }
+
         .svc .meta {
             margin-left: auto;
             text-align: right;
@@ -1635,7 +1743,7 @@
         <h2><i data-lucide="layers"></i>Services</h2>
         <div class="services" id="services"></div>
 
-        <h2><i data-lucide="bot"></i>Bots</h2>
+        <h2><i data-lucide="bot"></i>Trading bot details</h2>
         <div class="card" id="bot">
             <div class="bot-tabs" id="bot-tabs" role="tablist" aria-label="Bots"></div>
             <div class="bot-head">
@@ -2177,48 +2285,89 @@
                 .textContent = `ssh -p 8022 u0_a174@${host}`;
         }
 
+        // Services: core ones (web server, API, market data, SSH) as cards; services that share a group
+        // (the "# group: trading" line in their run file) go together in one group card with small bot cards.
+        const GROUPS = { trading: ["Trading bots", "bot", "paper money only"] };
+        let lastBots = [];  // latest /api/bots, for each bot card's result line
+        function svcStatus(svc) {
+            const up = svc.state === "run";
+            const off = !up && svc.enabled === false;
+            return { up, off, text: up ? "up " + fmtDuration(svc.since_s) : off ? "off" : "down " + fmtDuration(svc.since_s) };
+        }
+        function svcTile(svc, iconName) {
+            const { up, off } = svcStatus(svc);
+            const tile = el("span", { class: "svc-icon" });
+            tile.append(icon(iconName, "icon"), el("span", { class: "dot " + (up ? "good" : off ? "" : "bad") }));
+            return tile;
+        }
+        function renderServiceCard(svc) {
+            const st = svcStatus(svc);
+            const [label, iconName] = SERVICES[svc.name] || [svc.name, "box"];
+            const card = el("div", { class: "card svc" + (st.up ? "" : " is-down") });
+            const name = el("div", { class: "svc-text" });
+            name.append(el("div", { class: "name" }, label), el("div", { class: "small" }, svc.name));
+            if (svc.version) name.append(el("span", { class: "version" }, svc.version));
+            const meta = el("div", { class: "meta small" });
+            meta.append(el("div", {}, st.text));
+            if (svc.pid) meta.append(el("div", {}, "pid " + svc.pid));
+            card.append(svcTile(svc, iconName), name, meta);
+            return card;
+        }
+        function renderBotCard(svc) {
+            const st = svcStatus(svc);
+            const [label, iconName] = SERVICES[svc.name] || [svc.name, BOT_ICONS[svc.bot] || "bot"];
+            const b = lastBots.find((x) => x.bot === svc.bot);
+            const s = b ? b.state : null;
+            const card = el("button", {
+                type: "button",
+                class: "bot-card" + (st.up ? "" : " is-down") + (svc.bot && svc.bot === selectedBot ? " is-selected" : ""),
+                title: svc.bot ? "Show this bot's chart and trades" : "",
+            });
+            const head = el("div", { class: "bc-head" });
+            const titles = el("div", { class: "svc-text" });
+            titles.append(el("div", { class: "name" }, label), el("div", { class: "small" }, svc.name));
+            head.append(svcTile(svc, iconName), titles);
+            card.append(head);
+            if (s) {
+                const pnl = s.pnl_pct ?? 0;
+                const res = el("div", { class: "bc-result" });
+                res.append(el("b", { class: pnl > 0 ? "good-text" : pnl < 0 ? "bad-text" : "" }, (pnl >= 0 ? "+" : "") + pnl.toFixed(2) + "%"),
+                    el("span", {}, `${s.qty > 0 ? (isShort(s) ? "short " : "holding ") + s.base : "in cash"} · ${s.trades} trades`));
+                card.append(res);
+            }
+            const meta = el("div", { class: "bc-meta small" });
+            meta.append(el("span", {}, st.text + (svc.pid ? " · pid " + svc.pid : "")));
+            if (svc.version) meta.append(el("span", { class: "version" }, svc.version.replace(/^Python /, "Py ")));
+            card.append(meta);
+            if (svc.bot) card.addEventListener("click", () => {
+                selectBot(svc.bot);
+                $("bot").scrollIntoView({ behavior: "smooth", block: "start" });
+            });
+            return card;
+        }
         function renderServices(list) {
             const box = $("services");
             box.replaceChildren();
             if (!list.length) {
-                box.append(el("div", {
-                    class: "card small"
-                }, "No service info"));
+                box.append(el("div", { class: "card small" }, "No service info"));
                 return;
             }
+            const groups = {};
             for (const svc of list) {
-                const up = svc.state === "run";
-                const off = !up && svc.enabled === false;
-                const [label, iconName] = SERVICES[svc.name] || [svc.name, "box"];
-                const card = el("div", {
-                    class: "card svc" + (up ? "" : " is-down")
-                });
-                const tile = el("span", {
-                    class: "svc-icon"
-                });
-                tile.append(icon(iconName, "icon"), el("span", {
-                    class: "dot " + (up ? "good" : off ? "" : "bad")
-                }));
-                card.append(tile);
-                const name = el("div", {
-                    class: "svc-text"
-                });
-                name.append(el("div", {
-                    class: "name"
-                }, label));
-                name.append(el("div", {
-                    class: "small"
-                }, svc.name));
-                if (svc.version) name.append(el("span", {
-                    class: "version"
-                }, svc.version));
-                card.append(name);
-                const meta = el("div", {
-                    class: "meta small"
-                });
-                meta.append(el("div", {}, up ? "up " + fmtDuration(svc.since_s) : off ? "off" : "down " + fmtDuration(svc.since_s)));
-                if (svc.pid) meta.append(el("div", {}, "pid " + svc.pid));
-                card.append(meta);
+                if (svc.group) (groups[svc.group] ||= []).push(svc);
+                else box.append(renderServiceCard(svc));
+            }
+            for (const [group, members] of Object.entries(groups)) {
+                const [title, iconName, note] = GROUPS[group] || [group[0].toUpperCase() + group.slice(1), "layers", ""];
+                const running = members.filter((m) => m.state === "run").length;
+                const card = el("div", { class: "card svc-group" });
+                const head = el("div", { class: "group-head" });
+                const h = el("div", { class: "label" });
+                h.append(icon(iconName, "icon"), document.createTextNode(title));
+                head.append(h, el("span", { class: "small" }, `${running} of ${members.length} running` + (note ? ` · ${note}` : "")));
+                const grid = el("div", { class: "bot-cards" });
+                grid.append(...members.map(renderBotCard));
+                card.append(head, grid);
                 box.append(card);
             }
         }
@@ -2257,6 +2406,7 @@
         async function refreshBot() {
             try {
                 const bots = await api("/api/bots");
+                lastBots = bots;
                 if (!bots.some(b => b.bot === selectedBot)) selectedBot = (bots.find(b => b.bot === "paper-sma") || bots[0] || {})
                     .bot;
                 renderTabs(bots);
