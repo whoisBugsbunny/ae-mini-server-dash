@@ -8,6 +8,7 @@
     "devDependencies": {
         "echarts": "6.1.0",
         "esbuild": "^0.25.0",
-        "lucide": "1.79.0"
+        "lucide": "1.79.0",
+        "qrcode-generator": "2.0.4"
     }
 }

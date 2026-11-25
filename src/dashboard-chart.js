@@ -5,6 +5,7 @@ import {
 } from "echarts/components";
 import { CanvasRenderer } from "echarts/renderers";
 import { Activity, CircleDot, Crosshair, createIcons } from "lucide";
+import "./qr.js";
 
 echarts.use([
     BarChart, LineChart, ScatterChart, DataZoomComponent, GraphicComponent, GridComponent, MarkLineComponent,

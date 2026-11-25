@@ -474,6 +474,46 @@
             position: relative;
         }
 
+        /* "Open on another device" card: two columns wide, QR next to the address. */
+        .grid .qr-card {
+            grid-column: span 2;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .qr {
+            width: 112px;
+            height: 112px;
+            flex-shrink: 0;
+            padding: 8px;
+            border-radius: 8px;
+            background: #fff;
+            color: #000;
+        }
+
+        .qr svg {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .qr-info {
+            min-width: 0;
+        }
+
+        .qr-info .value {
+            overflow-wrap: anywhere;
+        }
+
+        .qr-info code {
+            display: block;
+            margin-top: 6px;
+            color: var(--sub);
+            font-size: .72rem;
+            overflow-wrap: anywhere;
+        }
+
         .table-wrap {
             overflow-x: auto;
         }
@@ -562,7 +602,7 @@
 
         @media (min-width: 900px) {
             .grid {
-                grid-template-columns: repeat(6, minmax(0, 1fr));
+                grid-template-columns: repeat(4, minmax(0, 1fr));
             }
         }
 
@@ -683,6 +723,15 @@
                 <div class="value" id="ip">–</div>
                 <div class="small" id="clock"></div>
             </div>
+            <div class="card qr-card">
+                <div class="qr" id="qr" role="img" aria-label="QR code for the dashboard address"></div>
+                <div class="qr-info">
+                    <div class="label">Open on another device</div>
+                    <div class="value" id="qr-url">–</div>
+                    <div class="small">Scan with a phone on the same Wi-Fi / hotspot.</div>
+                    <code id="qr-ssh"></code>
+                </div>
+            </div>
         </div>
 
         <h2>Services</h2>
@@ -786,7 +835,7 @@
         <footer>Self-hosted on an old phone · refreshes automatically</footer>
     </div>
 
-    <script src="assets/dashboard.bundle.js?v=b98317cda2"></script>
+    <script src="assets/dashboard.bundle.js?v=43f69b02bb"></script>
     <script>
         const $ = (id) => document.getElementById(id);
         const BOT = "paper-sma";
@@ -896,6 +945,7 @@
                 else $("temp-more").className = "small";
 
                 $("ip").textContent = s.ip || location.hostname;
+                renderQr(s.ip);
                 $("clock").textContent = "Phone time " + new Date(s.time * 1000).toLocaleTimeString();
 
                 renderServices(s.services || []);
@@ -903,6 +953,18 @@
                 // status pill shows the problem; keep the last good numbers on screen
             }
             renderStatus();
+        }
+
+        // QR for the server's own Wi-Fi address (not location.host: on the phone itself that is 127.0.0.1).
+        let qrUrl = "";
+        function renderQr(ip) {
+            const host = ip || location.hostname;
+            const url = `http://${host}${location.port ? ":" + location.port : ""}/`;
+            if (url === qrUrl || !window.dashboardQr) return;
+            qrUrl = url;
+            $("qr").innerHTML = window.dashboardQr(url);
+            $("qr-url").textContent = url.replace(/\/$/, "");
+            $("qr-ssh").textContent = `ssh -p 8022 u0_a174@${host}`;
         }
 
         function renderServices(list) {
