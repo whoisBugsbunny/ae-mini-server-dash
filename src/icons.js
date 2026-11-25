@@ -2,14 +2,14 @@
 import {
     Activity, ArrowDownUp, ArrowLeftRight, Battery, BatteryCharging, BatteryLow, BatteryWarning, BookOpen, Bot, Box,
     Camera, ChartCandlestick, ChartColumn, ChartLine, CircleDot, Clock, Code, Coins, Cpu, Crosshair, ExternalLink, Globe, HardDrive, HeartPulse,
-    KeyRound, Layers, MemoryStick, QrCode, Server, ServerCog, ShieldAlert, ShieldCheck, Smartphone, SquareTerminal, Thermometer, TrendingDown, TrendingUp,
+    KeyRound, Layers, MemoryStick, QrCode, Server, ServerCog, Moon, ShieldAlert, ShieldCheck, Smartphone, SquareTerminal, Sun, Thermometer, TrendingDown, TrendingUp,
     TriangleAlert, Wallet, Waves, Wifi, WifiOff, X, Zap, createElement, createIcons,
 } from "lucide";
 
 const ICONS = {
     Activity, ArrowDownUp, ArrowLeftRight, Battery, BatteryCharging, BatteryLow, BatteryWarning, BookOpen, Bot, Box,
     Camera, ChartCandlestick, ChartColumn, ChartLine, CircleDot, Clock, Code, Coins, Cpu, Crosshair, ExternalLink, Globe, HardDrive, HeartPulse,
-    KeyRound, Layers, MemoryStick, QrCode, Server, ServerCog, ShieldAlert, ShieldCheck, Smartphone, SquareTerminal, Thermometer, TrendingDown, TrendingUp,
+    KeyRound, Layers, MemoryStick, QrCode, Server, ServerCog, Moon, ShieldAlert, ShieldCheck, Smartphone, SquareTerminal, Sun, Thermometer, TrendingDown, TrendingUp,
     TriangleAlert, Wallet, Waves, Wifi, WifiOff, X, Zap,
 };
 

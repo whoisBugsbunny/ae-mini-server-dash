@@ -138,6 +138,95 @@
             height: 15px;
         }
 
+        button.pill-time {
+            font: inherit;
+            font-weight: 500;
+            font-size: .82rem;
+            cursor: pointer;
+        }
+
+        button.pill-time:hover,
+        button.pill-time:focus-visible {
+            border-color: var(--accent);
+            color: var(--text);
+            outline: none;
+        }
+
+        /* World time dialog (opened from the time badge); reuses the phone dialog's frame and backdrop */
+        .phone-dialog.time-dialog {
+            width: min(480px, calc(100vw - 32px));
+        }
+
+        .td-body {
+            max-height: var(--pd-h);
+            padding: 22px 22px 18px;
+        }
+
+        .td-utc {
+            padding: 4px 0 16px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 8px;
+        }
+
+        .td-utc .label {
+            margin: 0;
+        }
+
+        .td-utc-time {
+            font: 600 2.3rem/1.1 Georgia, "Times New Roman", serif;
+            font-variant-numeric: tabular-nums;
+            margin-top: 6px;
+        }
+
+        .td-row {
+            display: grid;
+            grid-template-columns: 22px 1fr auto;
+            align-items: center;
+            gap: 12px;
+            padding: 9px 4px;
+            border-top: 1px solid var(--border);
+        }
+
+        .td-row:first-child {
+            border-top: 0;
+        }
+
+        .td-row.is-you {
+            background: color-mix(in srgb, var(--accent) 8%, transparent);
+            border-radius: 6px;
+        }
+
+        .td-row svg {
+            width: 17px;
+            height: 17px;
+            color: var(--sub);
+        }
+
+        .td-row.day svg {
+            color: var(--warn);
+        }
+
+        .td-place b {
+            display: block;
+            font-size: .92rem;
+        }
+
+        .td-place small,
+        .td-when small {
+            color: var(--sub);
+            font-size: .76rem;
+        }
+
+        .td-when {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .td-when b {
+            display: block;
+            font-size: 1.02rem;
+        }
+
         /* Small warning badge in a card's label row, pushed to the right. */
         .card-alert {
             margin-left: auto;
@@ -1294,7 +1383,7 @@
                 </div>
             </div>
             <div class="header-right">
-                <div class="pill pill-time" title="Time on the phone"><i data-lucide="clock"></i><span id="phone-time">–</span></div>
+                <button class="pill pill-time" type="button" id="time-open" title="Date and time on the phone · tap for world times" aria-haspopup="dialog"><i data-lucide="clock"></i><span id="phone-time">–</span></button>
                 <div class="pill"><span class="dot" id="status-dot"></span><span id="status-text">Connecting…</span></div>
                 <div class="profile">
                     <button class="profile-btn" type="button" id="profile-btn" title="Owner's profiles" aria-haspopup="true" aria-expanded="false" aria-controls="profile-menu">
@@ -1505,6 +1594,19 @@
         <footer>Self-hosted on an old phone · refreshes automatically</footer>
     </div>
 
+    <dialog class="phone-dialog time-dialog" id="time-dialog" aria-labelledby="td-title">
+        <button class="pd-close" type="button" id="td-close" title="Close" aria-label="Close"><i data-lucide="x"></i></button>
+        <div class="td-body pd-scroll">
+            <div class="td-utc">
+                <div class="label" id="td-title"><i data-lucide="globe"></i>GMT / UTC</div>
+                <div class="td-utc-time" id="td-utc-time">–</div>
+                <div class="small" id="td-utc-date"></div>
+            </div>
+            <div id="td-list"></div>
+            <div class="small" style="margin-top:10px">Based on the phone's clock. Sun = daytime (6 am–6 pm) there.</div>
+        </div>
+    </dialog>
+
     <dialog class="phone-dialog" id="phone-dialog" aria-labelledby="pd-title">
         <button class="pd-close" type="button" id="pd-close" title="Close" aria-label="Close"><i data-lucide="x"></i></button>
         <div class="pd-body pd-scroll">
@@ -1523,7 +1625,7 @@
         </div>
     </dialog>
 
-    <script src="assets/dashboard.bundle.js?v=6b8bf2371a"></script>
+    <script src="assets/dashboard.bundle.js?v=bd2ec6a1c8"></script>
     <script>
         const $ = (id) => document.getElementById(id);
         let lastStatsOk = 0;
@@ -1657,12 +1759,15 @@
                     .textContent = fmtDuration(s.uptime_s);
                 $("procs")
                     .textContent = s.procs ? `${s.procs} processes` : "";
+                phoneClockOffset = s.time * 1000 - Date.now();
                 $("phone-time")
                     .textContent = new Date(s.time * 1000)
-                    .toLocaleTimeString([], {
+                    .toLocaleString([], {
+                        day: "numeric",
+                        month: "short",
                         hour: "2-digit",
                         minute: "2-digit"
-                    });
+                    }).replace(",", " ·");
 
                 if (s.load) {
                     const cores = s.cpu_count || 1;
@@ -2389,6 +2494,74 @@
                 clearInterval(deviceTimer);
                 document.body.classList.remove("pd-lock");
             });
+
+        // World time dialog: tap the date/time badge. Uses the phone's clock (offset from the last /api/stats).
+        const WORLD_CLOCKS = [
+            ["New York", "United States", "America/New_York"],
+            ["Los Angeles", "United States", "America/Los_Angeles"],
+            ["São Paulo", "Brazil", "America/Sao_Paulo"],
+            ["London", "United Kingdom", "Europe/London"],
+            ["Berlin", "Germany", "Europe/Berlin"],
+            ["Moscow", "Russia", "Europe/Moscow"],
+            ["Dubai", "UAE", "Asia/Dubai"],
+            ["New Delhi", "India", "Asia/Kolkata"],
+            ["Singapore", "Singapore", "Asia/Singapore"],
+            ["Beijing", "China", "Asia/Shanghai"],
+            ["Tokyo", "Japan", "Asia/Tokyo"],
+            ["Sydney", "Australia", "Australia/Sydney"],
+        ];
+        let phoneClockOffset = 0, timeTimer = null;
+        // Some systems (e.g. Windows) still report old zone names; map them to the ones in the list.
+        const ZONE_ALIASES = { "Asia/Calcutta": "Asia/Kolkata", "Asia/Chongqing": "Asia/Shanghai", "Asia/Harbin": "Asia/Shanghai",
+            "US/Eastern": "America/New_York", "US/Pacific": "America/Los_Angeles", "Australia/ACT": "Australia/Sydney" };
+        const viewerZone = (() => {
+            try { const z = Intl.DateTimeFormat().resolvedOptions().timeZone; return ZONE_ALIASES[z] || z; } catch (e) { return ""; }
+        })();
+        function zoneParts(date, timeZone) {
+            const parts = Object.fromEntries(new Intl.DateTimeFormat("en-US", {
+                timeZone, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", hourCycle: "h23",
+            }).formatToParts(date).map((p) => [p.type, p.value]));
+            return { day: `${parts.year}-${parts.month}-${parts.day}`, hour: Number(parts.hour) };
+        }
+        function renderWorldTime() {
+            const now = new Date(Date.now() + phoneClockOffset);
+            $("td-utc-time").textContent = now.toLocaleTimeString("en-GB", { timeZone: "UTC", hour: "2-digit", minute: "2-digit", second: "2-digit" });
+            $("td-utc-date").textContent = now.toLocaleDateString([], { timeZone: "UTC", weekday: "long", day: "numeric", month: "long", year: "numeric" });
+            const utcDay = zoneParts(now, "UTC").day;
+            const rows = WORLD_CLOCKS.map(([city, country, tz]) => {
+                const { day, hour } = zoneParts(now, tz);
+                const isDay = hour >= 6 && hour < 18;
+                const rel = day > utcDay ? "next day" : day < utcDay ? "previous day" : "";
+                let offset = "";
+                try {
+                    offset = new Intl.DateTimeFormat("en-US", { timeZone: tz, timeZoneName: "shortOffset" })
+                        .formatToParts(now).find((p) => p.type === "timeZoneName").value;
+                } catch (e) { /* older browsers: skip the offset */ }
+                const row = el("div", { class: "td-row" + (isDay ? " day" : "") + (tz === viewerZone ? " is-you" : "") });
+                const place = el("div", { class: "td-place" });
+                place.append(el("b", {}, city), el("small", {}, country + (tz === viewerZone ? " · your time zone" : "")));
+                const when = el("div", { class: "td-when" });
+                when.append(el("b", {}, now.toLocaleTimeString([], { timeZone: tz, hour: "2-digit", minute: "2-digit" })),
+                    el("small", {}, [now.toLocaleDateString([], { timeZone: tz, weekday: "short" }), offset, rel].filter(Boolean).join(" · ")));
+                row.append(icon(isDay ? "sun" : "moon"), place, when);
+                return row;
+            });
+            $("td-list").replaceChildren(...rows);
+        }
+        $("time-open").addEventListener("click", () => {
+            const dlg = $("time-dialog");
+            if (dlg.open) return;
+            renderWorldTime();
+            dlg.showModal();
+            document.body.classList.add("pd-lock");
+            timeTimer = setInterval(renderWorldTime, 1000);
+        });
+        $("td-close").addEventListener("click", () => $("time-dialog").close());
+        $("time-dialog").addEventListener("click", (e) => { if (e.target === e.currentTarget) e.currentTarget.close(); });
+        $("time-dialog").addEventListener("close", () => {
+            clearInterval(timeTimer);
+            document.body.classList.remove("pd-lock");
+        });
 
         // Owner profile menu: tap the avatar; closes on a tap outside, Esc, or after picking a link.
         (() => {
