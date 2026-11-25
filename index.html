@@ -19,6 +19,8 @@
             --good: #83d6a0;
             --bad: #ff8175;
             --warn: #f2bf63;
+            --yellow: #f3dc4f;
+            --orange: #f59a4a;
             --fast: #f2bf63;
             --slow: #82c9c4;
             --track: #30342e;
@@ -270,11 +272,19 @@
             transition: width .4s;
         }
 
-        .bar.warn>div {
-            background: var(--warn);
+        /* Usage levels (barLevel): lime < 60% < yellow < 75% < orange < 90% < red */
+        .bar.yellow>div,
+        .pd-core div.yellow {
+            background: var(--yellow);
         }
 
-        .bar.bad>div {
+        .bar.orange>div,
+        .pd-core div.orange {
+            background: var(--orange);
+        }
+
+        .bar.bad>div,
+        .pd-core div.bad {
             background: var(--bad);
         }
 
@@ -1462,10 +1472,14 @@
             return s < 60 ? `${Math.round(s)}s ago` : `${fmtDuration(s)} ago`;
         }
 
-        function setBar(id, pct, warnAt = 75, badAt = 90) {
+        // One colour scale for every usage bar (CPU, cores, RAM, storage; battery uses how empty it is).
+        function barLevel(pct) {
+            return pct >= 90 ? "bad" : pct >= 75 ? "orange" : pct >= 60 ? "yellow" : "";
+        }
+        function setBar(id, pct) {
             const bar = $(id);
             bar.firstElementChild.style.width = Math.min(100, Math.max(0, pct)) + "%";
-            bar.className = "bar" + (pct >= badAt ? " bad" : pct >= warnAt ? " warn" : "");
+            bar.className = ("bar " + barLevel(pct)).trim();
         }
 
         async function api(path) {
@@ -1527,7 +1541,7 @@
                     const used = m.total - m.available;
                     $("mem")
                         .textContent = `${fmtBytes(used)} / ${fmtBytes(m.total)}`;
-                    setBar("mem-bar", used / m.total * 100, 80, 92);
+                    setBar("mem-bar", used / m.total * 100);
                     $("swap")
                         .textContent = m.swap_total ?
                         `Swap ${fmtBytes(m.swap_total - m.swap_free)} / ${fmtBytes(m.swap_total)} · ${fmtBytes(m.available)} free` :
@@ -1588,9 +1602,10 @@
 
             pct.textContent = `${b.percentage}%`;
             pct.className = "value" + (b.percentage <= 20 ? " bad-text" : "");
-            setBar("bat-bar", 100 - b.percentage, 70, 85); // colour by how empty it is
-            $("bat-bar")
-                .firstElementChild.style.width = b.percentage + "%";
+            // Reverse scale for the battery (low is bad): >50% lime, 30–50 yellow, 15–30 orange, <15 red
+            setBar("bat-bar", b.percentage);
+            const batLevel = b.percentage < 15 ? "bad" : b.percentage < 30 ? "orange" : b.percentage <= 50 ? "yellow" : "";
+            $("bat-bar").className = ("bar " + batLevel).trim();
 
             // Most important problem goes in the small badge at the top right; all of them in its tooltip.
             const problems = [
@@ -2085,7 +2100,9 @@
                     title: `Core ${i}: ${mhz ?? "?"} MHz`
                 });
                 const fill = el("div");
-                fill.style.height = Math.min(100, (mhz || 0) / max * 100) + "%";
+                const pct = Math.min(100, (mhz || 0) / max * 100);
+                fill.style.height = pct + "%";
+                if (barLevel(pct)) fill.className = barLevel(pct);
                 b.append(fill);
                 bars.append(b);
                 lbls.append(el("span", {}, mhz != null ? (mhz / 1000)
