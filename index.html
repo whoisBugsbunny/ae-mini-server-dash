@@ -879,15 +879,17 @@
                 <div class="value" id="temp-cpu">–</div>
                 <div class="small" id="temp-more"></div>
             </div>
-            <div class="card">
-                <div class="label"><i data-lucide="wifi"></i>Network</div>
-                <div class="value" id="ip">–</div>
-                <div class="small" id="clock"></div>
+            <div class="card" id="battery-card">
+                <div class="label"><i data-lucide="battery" id="battery-icon"></i>Battery</div>
+                <div class="value" id="bat-pct">–</div>
+                <div class="bar" id="bat-bar"><div></div></div>
+                <div class="small" id="bat-state"></div>
+                <div class="small" id="bat-health"></div>
             </div>
             <div class="card qr-card">
                 <div class="qr" id="qr" role="img" aria-label="QR code for the dashboard address"></div>
                 <div class="qr-info">
-                    <div class="label"><i data-lucide="qr-code"></i>Open on another device</div>
+                    <div class="label"><i data-lucide="wifi"></i>Network · open on another device</div>
                     <div class="value" id="qr-url">–</div>
                     <div class="small">Scan with a phone on the same Wi-Fi / hotspot.</div>
                     <code id="qr-ssh"></code>
@@ -1000,7 +1002,7 @@
         <footer>Self-hosted on an old phone · refreshes automatically</footer>
     </div>
 
-    <script src="assets/dashboard.bundle.js?v=372f002441"></script>
+    <script src="assets/dashboard.bundle.js?v=e299699162"></script>
     <script>
         const $ = (id) => document.getElementById(id);
         let lastStatsOk = 0;
@@ -1090,7 +1092,8 @@
                     .filter(Boolean).join(" · ");
 
                 $("uptime").textContent = fmtDuration(s.uptime_s);
-                $("procs").textContent = s.procs ? `${s.procs} processes` : "";
+                $("procs").textContent = (s.procs ? `${s.procs} processes · ` : "") +
+                    "phone time " + new Date(s.time * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
                 if (s.load) {
                     const cores = s.cpu_count || 1;
@@ -1125,15 +1128,60 @@
                 if (t.battery_c >= 45) $("temp-more").className = "small bad-text";
                 else $("temp-more").className = "small";
 
-                $("ip").textContent = s.ip || location.hostname;
                 renderQr(s.ip);
-                $("clock").textContent = "Phone time " + new Date(s.time * 1000).toLocaleTimeString();
+                renderBattery(s.battery);
 
                 renderServices(s.services || []);
             } catch (e) {
                 // status pill shows the problem; keep the last good numbers on screen
             }
             renderStatus();
+        }
+
+        // Battery from Termux:API. A server phone should stay plugged in, so "unplugged" is a warning,
+        // as are heat (swelling risk) and any health other than GOOD.
+        function renderBattery(b) {
+            const pct = $("bat-pct"), state = $("bat-state"), health = $("bat-health");
+            if (!b || b.error) {
+                pct.textContent = "–";
+                state.textContent = b ? b.error : "Waiting for the first reading…";
+                state.className = "small" + (b ? " bad-text" : "");
+                health.textContent = "";
+                return;
+            }
+            const charging = b.status === "CHARGING" || b.status === "FULL";
+            const unplugged = b.plugged === "UNPLUGGED";
+            const hot = b.temperature >= 45;
+            const unhealthy = b.health && b.health !== "GOOD";
+
+            pct.textContent = `${b.percentage}%`;
+            pct.className = "value" + (b.percentage <= 20 ? " bad-text" : "");
+            setBar("bat-bar", 100 - b.percentage, 70, 85); // colour by how empty it is
+            $("bat-bar").firstElementChild.style.width = b.percentage + "%";
+
+            const how = { CHARGING: "Charging", FULL: "Full", DISCHARGING: "On battery", NOT_CHARGING: "Not charging" }[b.status] || b.status;
+            const plug = { PLUGGED_AC: "charger", PLUGGED_USB: "USB", PLUGGED_WIRELESS: "wireless" }[b.plugged];
+            state.textContent = [
+                unplugged ? "⚠ Unplugged, on battery" : `${how}${plug ? " · " + plug : ""}`,
+                b.current_ma != null ? `${Math.round(b.current_ma)} mA ${charging ? "in" : "out"}` : null,
+                b.temperature != null ? `${b.temperature.toFixed(1)} °C` : null,
+            ].filter(Boolean).join(" · ");
+            state.className = "small" + (unplugged || hot ? " bad-text" : "");
+
+            const wear = b.est_capacity_pct != null
+                ? ` · ~${Math.round(b.est_capacity_pct)}% capacity (~${Math.round(b.est_full_mah)} of ${Math.round(b.design_mah)} mAh, est.)`
+                : "";
+            health.textContent = `Health ${b.health || "?"}${wear}`;
+            health.className = "small" + (unhealthy ? " bad-text" : "");
+
+            // Swap the label icon to match the state.
+            const name = unhealthy || hot ? "battery-warning" : charging ? "battery-charging" : b.percentage <= 20 ? "battery-low" : "battery";
+            const old = $("battery-card").querySelector(".label svg");
+            if (old && old.dataset.state !== name && window.dashboardIcon) {
+                const svg = window.dashboardIcon(name, "icon");
+                svg.dataset.state = name;
+                old.replaceWith(svg);
+            }
         }
 
         // QR for the server's own Wi-Fi address (not location.host: on the phone itself that is 127.0.0.1).

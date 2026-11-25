@@ -1,14 +1,16 @@
 // Lucide icons used by the dashboard. Only the icons imported here end up in the bundle.
 import {
-    Activity, ArrowDownUp, ArrowLeftRight, BookOpen, Bot, Box, ChartCandlestick, ChartColumn, ChartLine, CircleDot,
-    Clock, Coins, Cpu, Crosshair, Globe, HardDrive, KeyRound, Layers, MemoryStick, QrCode, Server, ServerCog,
-    SquareTerminal, Thermometer, TrendingDown, TrendingUp, Wallet, Waves, Wifi, createElement, createIcons,
+    Activity, ArrowDownUp, ArrowLeftRight, Battery, BatteryCharging, BatteryLow, BatteryWarning, BookOpen, Bot, Box,
+    ChartCandlestick, ChartColumn, ChartLine, CircleDot, Clock, Coins, Cpu, Crosshair, Globe, HardDrive, KeyRound,
+    Layers, MemoryStick, QrCode, Server, ServerCog, SquareTerminal, Thermometer, TrendingDown, TrendingUp, Wallet,
+    Waves, Wifi, createElement, createIcons,
 } from "lucide";
 
 const ICONS = {
-    Activity, ArrowDownUp, ArrowLeftRight, BookOpen, Bot, Box, ChartCandlestick, ChartColumn, ChartLine, CircleDot,
-    Clock, Coins, Cpu, Crosshair, Globe, HardDrive, KeyRound, Layers, MemoryStick, QrCode, Server, ServerCog,
-    SquareTerminal, Thermometer, TrendingDown, TrendingUp, Wallet, Waves, Wifi,
+    Activity, ArrowDownUp, ArrowLeftRight, Battery, BatteryCharging, BatteryLow, BatteryWarning, BookOpen, Bot, Box,
+    ChartCandlestick, ChartColumn, ChartLine, CircleDot, Clock, Coins, Cpu, Crosshair, Globe, HardDrive, KeyRound,
+    Layers, MemoryStick, QrCode, Server, ServerCog, SquareTerminal, Thermometer, TrendingDown, TrendingUp, Wallet,
+    Waves, Wifi,
 };
 
 // kebab-case name ("chart-line") -> icon node, the same names <i data-lucide="..."> uses.
