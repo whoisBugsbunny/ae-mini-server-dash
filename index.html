@@ -103,6 +103,60 @@
             border: 1px solid var(--border);
         }
 
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pill-time {
+            color: var(--sub);
+            font-weight: 500;
+            font-variant-numeric: tabular-nums;
+            gap: 7px;
+        }
+
+        .pill-time svg {
+            width: 15px;
+            height: 15px;
+        }
+
+        /* Small warning badge in a card's label row, pushed to the right. */
+        .card-alert {
+            margin-left: auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 7px;
+            border-radius: 999px;
+            font-size: .68rem;
+            font-weight: 700;
+            color: var(--bad);
+            background: color-mix(in srgb, var(--bad) 14%, transparent);
+            white-space: nowrap;
+        }
+
+        .card-alert[hidden] {
+            display: none;
+        }
+
+        .card-alert svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        .inline-icon {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+        }
+
+        .inline-icon svg {
+            width: 13px;
+            height: 13px;
+        }
+
         .dot {
             width: 8px;
             height: 8px;
@@ -846,7 +900,10 @@
                     <div class="device" id="device">Connecting…</div>
                 </div>
             </div>
-            <div class="pill"><span class="dot" id="status-dot"></span><span id="status-text">Connecting…</span></div>
+            <div class="header-right">
+                <div class="pill pill-time" title="Time on the phone"><i data-lucide="clock"></i><span id="phone-time">–</span></div>
+                <div class="pill"><span class="dot" id="status-dot"></span><span id="status-text">Connecting…</span></div>
+            </div>
         </header>
 
         <h2><i data-lucide="server"></i>Server</h2>
@@ -880,7 +937,7 @@
                 <div class="small" id="temp-more"></div>
             </div>
             <div class="card" id="battery-card">
-                <div class="label"><i data-lucide="battery" id="battery-icon"></i>Battery</div>
+                <div class="label"><i data-lucide="battery" id="battery-icon"></i>Battery<span class="card-alert" id="bat-alert" hidden></span></div>
                 <div class="value" id="bat-pct">–</div>
                 <div class="bar" id="bat-bar"><div></div></div>
                 <div class="small" id="bat-state"></div>
@@ -1002,7 +1059,7 @@
         <footer>Self-hosted on an old phone · refreshes automatically</footer>
     </div>
 
-    <script src="assets/dashboard.bundle.js?v=e299699162"></script>
+    <script src="assets/dashboard.bundle.js?v=c5b0070aa7"></script>
     <script>
         const $ = (id) => document.getElementById(id);
         let lastStatsOk = 0;
@@ -1092,8 +1149,8 @@
                     .filter(Boolean).join(" · ");
 
                 $("uptime").textContent = fmtDuration(s.uptime_s);
-                $("procs").textContent = (s.procs ? `${s.procs} processes · ` : "") +
-                    "phone time " + new Date(s.time * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+                $("procs").textContent = s.procs ? `${s.procs} processes` : "";
+                $("phone-time").textContent = new Date(s.time * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
                 if (s.load) {
                     const cores = s.cpu_count || 1;
@@ -1147,6 +1204,7 @@
                 state.textContent = b ? b.error : "Waiting for the first reading…";
                 state.className = "small" + (b ? " bad-text" : "");
                 health.textContent = "";
+                $("bat-alert").hidden = true;
                 return;
             }
             const charging = b.status === "CHARGING" || b.status === "FULL";
@@ -1159,19 +1217,39 @@
             setBar("bat-bar", 100 - b.percentage, 70, 85); // colour by how empty it is
             $("bat-bar").firstElementChild.style.width = b.percentage + "%";
 
+            // Most important problem goes in the small badge at the top right; all of them in its tooltip.
+            const problems = [
+                unhealthy && `Health ${b.health}`,
+                hot && `Hot ${b.temperature.toFixed(0)} °C`,
+                unplugged && "Unplugged",
+                b.percentage <= 20 && "Low",
+            ].filter(Boolean);
+            const alert = $("bat-alert");
+            alert.hidden = !problems.length;
+            if (problems.length) {
+                alert.replaceChildren(icon("triangle-alert"), document.createTextNode(problems[0]));
+                alert.title = problems.join(" · ") + (unplugged ? " — a server phone should stay on the charger" : "");
+            }
+
+            // Line 1: state, current and temperature, kept short so it fits one line.
             const how = { CHARGING: "Charging", FULL: "Full", DISCHARGING: "On battery", NOT_CHARGING: "Not charging" }[b.status] || b.status;
-            const plug = { PLUGGED_AC: "charger", PLUGGED_USB: "USB", PLUGGED_WIRELESS: "wireless" }[b.plugged];
             state.textContent = [
-                unplugged ? "⚠ Unplugged, on battery" : `${how}${plug ? " · " + plug : ""}`,
+                how,
                 b.current_ma != null ? `${Math.round(b.current_ma)} mA ${charging ? "in" : "out"}` : null,
                 b.temperature != null ? `${b.temperature.toFixed(1)} °C` : null,
             ].filter(Boolean).join(" · ");
-            state.className = "small" + (unplugged || hot ? " bad-text" : "");
+            state.className = "small" + (hot ? " bad-text" : "");
+            const plug = { PLUGGED_AC: "charger", PLUGGED_USB: "USB", PLUGGED_WIRELESS: "wireless" }[b.plugged];
+            state.title = plug ? `Plugged into ${plug}` : "";
 
-            const wear = b.est_capacity_pct != null
-                ? ` · ~${Math.round(b.est_capacity_pct)}% capacity (~${Math.round(b.est_full_mah)} of ${Math.round(b.design_mah)} mAh, est.)`
+            // Line 2: ♥ health and capacity estimate; the mAh detail is in the tooltip.
+            const line = el("span", { class: "inline-icon" });
+            line.append(icon("heart-pulse"), document.createTextNode(
+                (b.health || "?") + (b.est_capacity_pct != null ? ` · ~${Math.round(b.est_capacity_pct)}% capacity` : "")));
+            health.replaceChildren(line);
+            health.title = b.est_full_mah != null
+                ? `Holds about ${Math.round(b.est_full_mah).toLocaleString()} of ${Math.round(b.design_mah).toLocaleString()} mAh when full (estimate from the phone's charge counter)`
                 : "";
-            health.textContent = `Health ${b.health || "?"}${wear}`;
             health.className = "small" + (unhealthy ? " bad-text" : "");
 
             // Swap the label icon to match the state.
