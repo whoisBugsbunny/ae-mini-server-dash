@@ -622,13 +622,13 @@
         <footer>Self-hosted on an old phone · refreshes automatically</footer>
     </div>
 
+    <script src="assets/dashboard.bundle.js"></script>
     <script>
         const $ = (id) => document.getElementById(id);
         const BOT = "paper-sma";
         let lastStatsOk = 0;
 
         const SERVICE_NAMES = {
-    <script src="assets/dashboard.bundle.js"></script>
             "sshd": "SSH",
             "nginx": "Web server",
             "ae-api": "Dashboard API",
@@ -787,8 +787,6 @@
             $("bot-title").textContent = `Paper bot · ${s.symbol}`;
             $("bot-strategy").textContent =
                 `${s.strategy} · checks every ${s.interval_s}s · fee ${(s.fee * 100).toFixed(2)}% · started with ${usd(s.start_cash, 0)}`;
-            $("leg-fast").textContent = `SMA ${s.fast_n}`;
-            $("leg-slow").textContent = `SMA ${s.slow_n}`;
             $("bot-price").textContent = usd(s.price);
             $("bot-updated").textContent = s.last_ok ? `Updated ${ago(s.last_ok)} · source ${s.source}` : "";
 
@@ -834,9 +832,11 @@
         }
 
         function drawChart(points, trades, fastN, slowN) {
-            window.dashboardChart.update(points, trades, fastN, slowN);
+            // If the chart bundle failed to load, keep the rest of the dashboard working.
+            window.dashboardChart?.update(points, trades, fastN, slowN);
         }
 
+        window.dashboardChart?.init();
         refreshStats();
         refreshBot();
         setInterval(refreshStats, 5000);
@@ -847,4 +847,3 @@
 </body>
 
 </html>
-        window.dashboardChart.init();

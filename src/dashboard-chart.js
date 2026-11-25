@@ -68,6 +68,31 @@ function findLevels(points) {
     }).filter(Boolean);
 }
 
+// Points arrive about once per bot interval. When the bot was offline (no internet, phone asleep),
+// insert a null so the line breaks instead of drawing a straight line across the missing hours.
+function gapThresholdMs(points) {
+    const steps = [];
+    for (let index = 1; index < points.length; index++) {
+        steps.push((Number(points[index].ts) - Number(points[index - 1].ts)) * 1000);
+    }
+    if (!steps.length) return Infinity;
+    steps.sort((a, b) => a - b);
+    const typical = steps[Math.floor(steps.length / 2)];
+    return Math.max(typical * 3, 180000);
+}
+
+function seriesWithGaps(points, key, gapMs) {
+    const data = [];
+    let previous = null;
+    for (const point of points) {
+        const time = Number(point.ts) * 1000;
+        if (previous !== null && time - previous > gapMs) data.push([previous + 1, null]);
+        data.push([time, point[key]]);
+        previous = time;
+    }
+    return data;
+}
+
 function buildOption() {
     const { points, trades, fastN, slowN } = chartData;
     const accent = themeColor("--accent");
@@ -83,10 +108,11 @@ function buildOption() {
     }));
     const start = points.length ? Number(points[0].ts) * 1000 : 0;
     const end = points.length ? Number(points[points.length - 1].ts) * 1000 : 0;
+    const gapMs = gapThresholdMs(points);
     const series = [{
         name: "Price",
         type: "line",
-        data: points.map(point => [Number(point.ts) * 1000, point.price]),
+        data: seriesWithGaps(points, "price", gapMs),
         showSymbol: false,
         connectNulls: false,
         lineStyle: { color: accent, width: 2 },
@@ -120,14 +146,14 @@ function buildOption() {
         series.push({
             name: `SMA ${fastN}`,
             type: "line",
-            data: points.map(point => [Number(point.ts) * 1000, point.fast]),
+            data: seriesWithGaps(points, "fast", gapMs),
             showSymbol: false,
             connectNulls: false,
             lineStyle: { color: themeColor("--fast"), width: 1.3 },
         }, {
             name: `SMA ${slowN}`,
             type: "line",
-            data: points.map(point => [Number(point.ts) * 1000, point.slow]),
+            data: seriesWithGaps(points, "slow", gapMs),
             showSymbol: false,
             connectNulls: false,
             lineStyle: { color: themeColor("--slow"), width: 1.3 },
