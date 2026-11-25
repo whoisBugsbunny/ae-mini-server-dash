@@ -243,6 +243,86 @@
             font-size: 1.05rem;
         }
 
+        .bot-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .bot-tab {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 150px;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--inset);
+            color: var(--sub);
+            font: inherit;
+            font-size: .8rem;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .bot-tab b {
+            color: var(--text);
+            font-size: .88rem;
+        }
+
+        .bot-tab[aria-selected="true"] {
+            border-color: var(--accent);
+            background: color-mix(in srgb, var(--accent) 8%, transparent);
+        }
+
+        .bot-tab:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        .signals {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 10px 0 2px;
+        }
+
+        .signal {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            font-size: .78rem;
+            color: var(--sub);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .signal b {
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .signal.ok {
+            border-color: color-mix(in srgb, var(--good) 55%, transparent);
+        }
+
+        .signal.ok::before,
+        .signal.no::before {
+            content: "";
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--good);
+        }
+
+        .signal.no::before {
+            background: var(--sub);
+            opacity: .6;
+        }
+
         .badge {
             font-size: .68rem;
             font-weight: 700;
@@ -739,13 +819,16 @@
 
         <h2>Bots</h2>
         <div class="card" id="bot">
+            <div class="bot-tabs" id="bot-tabs" role="tablist" aria-label="Bots"></div>
             <div class="bot-head">
                 <div>
                     <div class="bot-title" id="bot-title">Paper bot</div>
                     <div class="small" id="bot-strategy"></div>
+                    <div class="small" id="bot-exits"></div>
                 </div>
                 <span class="badge">PAPER MONEY ONLY</span>
             </div>
+            <div class="signals" id="bot-signals" aria-label="What the bot is checking right now"></div>
             <div class="price" id="bot-price">–</div>
             <div class="small" id="bot-updated"></div>
             <div id="bot-notice"></div>
@@ -835,19 +918,30 @@
         <footer>Self-hosted on an old phone · refreshes automatically</footer>
     </div>
 
-    <script src="assets/dashboard.bundle.js?v=43f69b02bb"></script>
+    <script src="assets/dashboard.bundle.js?v=86069d2f23"></script>
     <script>
         const $ = (id) => document.getElementById(id);
-        const BOT = "paper-sma";
         let lastStatsOk = 0;
 
         const SERVICE_NAMES = {
             "sshd": "SSH",
             "nginx": "Web server",
             "ae-api": "Dashboard API",
-            "ae-bot-paper-sma": "Paper bot",
+            "ae-bot-paper-sma": "SMA bot",
+            "ae-bot-flow": "Flow bot",
+            "ae-market": "Market data",
             "ssh-agent": "SSH agent",
         };
+
+        // Which bot the Bots section shows; remembered per browser (storage can be blocked, so guard it).
+        // A link like ?bot=paper-flow opens that bot directly.
+        let selectedBot = new URLSearchParams(location.search).get("bot") ||
+            (() => { try { return localStorage.getItem("ae-bot"); } catch (e) { return null; } })();
+        function selectBot(name) {
+            selectedBot = name;
+            try { localStorage.setItem("ae-bot", name); } catch (e) { /* not essential */ }
+            refreshBot();
+        }
 
         function fmtBytes(b) {
             if (b == null) return "–";
@@ -998,9 +1092,28 @@
         }
 
         // ---------- bot ----------
+        function renderTabs(bots) {
+            const box = $("bot-tabs");
+            box.replaceChildren();
+            if (bots.length < 2) return;
+            for (const b of bots) {
+                const s = b.state;
+                const tab = el("button", { class: "bot-tab", type: "button", role: "tab", "aria-selected": String(b.bot === selectedBot) });
+                tab.append(el("b", {}, s.title || "SMA bot"));
+                const pnl = s.pnl_pct == null ? "" : ` · ${(s.pnl_pct >= 0 ? "+" : "") + s.pnl_pct.toFixed(2)}%`;
+                tab.append(el("span", {}, `${s.qty > 0 ? "holding " + s.base : "in cash"} · ${s.trades} trades${pnl}`));
+                tab.addEventListener("click", () => selectBot(b.bot));
+                box.append(tab);
+            }
+        }
+
         async function refreshBot() {
             try {
-                const b = await api(`/api/bots/${BOT}?points=600`);
+                const bots = await api("/api/bots");
+                if (!bots.some(b => b.bot === selectedBot)) selectedBot = (bots.find(b => b.bot === "paper-sma") || bots[0] || {}).bot;
+                renderTabs(bots);
+                if (!selectedBot) throw new Error("no bots yet");
+                const b = await api(`/api/bots/${selectedBot}?points=600`);
                 renderBot(b);
             } catch (e) {
                 $("bot-notice").replaceChildren(el("div", { class: "notice" },
@@ -1010,9 +1123,16 @@
 
         function renderBot(b) {
             const s = b.state;
-            $("bot-title").textContent = `Paper bot · ${s.symbol}`;
+            $("bot-title").textContent = `${s.title || "SMA bot"} · ${s.symbol}`;
             $("bot-strategy").textContent =
                 `${s.strategy} · checks every ${s.interval_s}s · fee ${(s.fee * 100).toFixed(2)}% · started with ${usd(s.start_cash, 0)}`;
+            $("bot-exits").textContent = s.exits ? `Exits: ${s.exits}` : "";
+
+            $("bot-signals").replaceChildren(...(s.signals || []).map(sig => {
+                const chip = el("span", { class: "signal" + (sig.ok === true ? " ok" : sig.ok === false ? " no" : "") }, sig.name + " ");
+                chip.append(el("b", {}, sig.value));
+                return chip;
+            }));
             $("bot-price").textContent = usd(s.price);
             $("bot-updated").textContent = s.last_ok ? `Updated ${ago(s.last_ok)} · source ${s.source}` : "";
 
@@ -1035,7 +1155,9 @@
             $("bot-position").textContent = s.qty > 0 ? `${s.qty.toFixed(6)} ${s.base}` : "Cash";
             $("bot-trades").textContent = s.trades;
 
-            drawChart(b.prices, b.trades, s.fast_n, s.slow_n, b.round_trips || []);
+            const fastLabel = s.fast_label !== undefined ? s.fast_label : `SMA ${s.fast_n}`;
+            const slowLabel = s.slow_label !== undefined ? s.slow_label : `SMA ${s.slow_n}`;
+            drawChart(b.prices, b.trades, fastLabel, slowLabel, b.round_trips || []);
             renderTrips(b.round_trips || [], b.summary, s.base);
         }
 

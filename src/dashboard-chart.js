@@ -196,16 +196,19 @@ function buildOption() {
         },
     }];
 
+    // fastN / slowN are the line names the bot reports (e.g. "SMA 5", "Trend (30-min avg)");
+    // a bot without a fast line passes null and that line is skipped.
     if (overlays.sma) {
-        series.push({
-            name: `SMA ${fastN}`,
+        if (fastN) series.push({
+            name: fastN,
             type: "line",
             data: seriesWithGaps(points, "fast", gapMs),
             showSymbol: false,
             connectNulls: false,
             lineStyle: { color: themeColor("--fast"), width: 1.3 },
-        }, {
-            name: `SMA ${slowN}`,
+        });
+        if (slowN) series.push({
+            name: slowN,
             type: "line",
             data: seriesWithGaps(points, "slow", gapMs),
             showSymbol: false,
