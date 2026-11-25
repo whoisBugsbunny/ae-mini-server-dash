@@ -876,6 +876,42 @@
             text-align: right;
         }
 
+        td .why {
+            display: block;
+            max-width: 340px;
+            margin-top: 3px;
+            color: var(--text);
+            opacity: .8;
+            font-size: .74rem;
+            line-height: 1.35;
+            white-space: normal;
+        }
+
+        .recent-signals {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
+            margin: 4px 0 10px;
+            font-size: .76rem;
+        }
+
+        .recent-signals .rs-title {
+            color: var(--sub);
+            font-weight: 600;
+        }
+
+        .recent-signals .rs {
+            padding: 2px 8px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: var(--inset);
+        }
+
+        .recent-signals .rs.bull b { color: var(--good); }
+        .recent-signals .rs.bear b { color: var(--bad); }
+        .recent-signals .rs small { color: var(--sub); }
+
         td .sub {
             display: block;
             color: var(--sub);
@@ -1614,6 +1650,7 @@
             <div class="price" id="bot-price">–</div>
             <div class="small" id="bot-updated"></div>
             <div id="bot-notice"></div>
+            <div class="recent-signals" id="bot-recent" hidden></div>
 
             <div class="kpis">
                 <div class="kpi">
@@ -1764,6 +1801,7 @@
             "ae-bot-flow": ["Flow bot", "waves"],
             "ae-bot-inverse": ["Inverse SMA bot", "arrow-down-up"],
             "ae-bot-scalp": ["Scalp bot", "zap"],
+            "ae-bot-patterns": ["Pattern bot", "chart-candlestick"],
             "ae-market": ["Market data", "chart-candlestick"],
             "ssh-agent": ["SSH agent", "key-round"],
         };
@@ -1771,7 +1809,8 @@
             "paper-sma": "chart-line",
             "paper-flow": "waves",
             "paper-sma-inverse": "arrow-down-up",
-            "paper-scalp": "zap"
+            "paper-scalp": "zap",
+            "paper-patterns": "chart-candlestick"
         };
         const isShort = (s) => s.direction === "short";
         const icon = (name, cls) => window.dashboardIcon ? window.dashboardIcon(name, cls) : document.createTextNode("");
@@ -2272,6 +2311,18 @@
             $("bot-notice")
                 .replaceChildren(...notices);
 
+            // Signals the bot spotted recently (Pattern bot), newest first: ▲ bullish, ▼ bearish, (points).
+            const recent = s.recent_signals || [];
+            const box = $("bot-recent");
+            box.hidden = !recent.length;
+            box.replaceChildren(...(recent.length ? [el("span", { class: "rs-title" }, "Recent signals")] : []),
+                ...recent.slice(0, 8).map((r) => {
+                    const chip = el("span", { class: `rs ${r.side}`, title: `${r.side === "bull" ? "Bullish" : "Bearish"} · ${r.pts} point${r.pts > 1 ? "s" : ""}` });
+                    chip.append(el("b", {}, r.side === "bull" ? "▲ " : "▼ "), document.createTextNode(`${r.name} `),
+                        el("small", {}, `${new Date(r.ts * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} · ${r.pts}`));
+                    return chip;
+                }));
+
             $("bot-equity")
                 .textContent = usd(s.equity);
             const pnl = $("bot-pnl");
@@ -2427,11 +2478,16 @@
                 row.append(cell("small", t.open ? el("span", {
                     class: "tag"
                 }, "OPEN") : String(number--)));
-                row.append(cell("", `${t.side === "short" ? "Short" : "Buy"} ${usd(t.entry_price)}`, `${tradeTime(t.entry_ts)} · ${amount}`));
+                // Why the bot opened / closed the trade (the signal), under the time.
+                const why = (td, reason) => {
+                    if (reason) td.append(el("span", { class: "why" }, reason));
+                    return td;
+                };
+                row.append(why(cell("", `${t.side === "short" ? "Short" : "Buy"} ${usd(t.entry_price)}`, `${tradeTime(t.entry_ts)} · ${amount}`), t.entry_reason));
                 if (t.open) {
                     row.append(cell("", t.side === "short" ? "Still short" : "Still holding", `price ${usd(t.exit_price)} now`));
                 } else {
-                    row.append(cell("", `${t.side === "short" ? "Cover" : "Sell"} ${usd(t.exit_price)}`, tradeTime(t.exit_ts)));
+                    row.append(why(cell("", `${t.side === "short" ? "Cover" : "Sell"} ${usd(t.exit_price)}`, tradeTime(t.exit_ts)), t.exit_reason));
                 }
                 row.append(cell("num", fmtDuration(t.duration_s)));
                 if (t.gross_pnl != null) {
