@@ -1,14 +1,14 @@
 // Lucide icons used by the dashboard. Only the icons imported here end up in the bundle.
 import {
     Activity, ArrowDownUp, ArrowLeftRight, Battery, BatteryCharging, BatteryLow, BatteryWarning, BookOpen, Bot, Box,
-    Camera, ChartCandlestick, ChartColumn, ChartLine, CircleDot, Clock, Coins, Cpu, Crosshair, Globe, HardDrive, HeartPulse,
+    Camera, ChartCandlestick, ChartColumn, ChartLine, CircleDot, Clock, Coins, Cpu, Crosshair, ExternalLink, Globe, HardDrive, HeartPulse,
     KeyRound, Layers, MemoryStick, QrCode, Server, ServerCog, ShieldAlert, ShieldCheck, Smartphone, SquareTerminal, Thermometer, TrendingDown, TrendingUp,
     TriangleAlert, Wallet, Waves, Wifi, WifiOff, X, Zap, createElement, createIcons,
 } from "lucide";
 
 const ICONS = {
     Activity, ArrowDownUp, ArrowLeftRight, Battery, BatteryCharging, BatteryLow, BatteryWarning, BookOpen, Bot, Box,
-    Camera, ChartCandlestick, ChartColumn, ChartLine, CircleDot, Clock, Coins, Cpu, Crosshair, Globe, HardDrive, HeartPulse,
+    Camera, ChartCandlestick, ChartColumn, ChartLine, CircleDot, Clock, Coins, Cpu, Crosshair, ExternalLink, Globe, HardDrive, HeartPulse,
     KeyRound, Layers, MemoryStick, QrCode, Server, ServerCog, ShieldAlert, ShieldCheck, Smartphone, SquareTerminal, Thermometer, TrendingDown, TrendingUp,
     TriangleAlert, Wallet, Waves, Wifi, WifiOff, X, Zap,
 };

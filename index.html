@@ -914,6 +914,103 @@
             }
         }
 
+        /* Owner profile button + links menu (top right) */
+        .profile {
+            position: relative;
+        }
+
+        .profile-btn {
+            display: block;
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: var(--card);
+            overflow: hidden;
+            cursor: pointer;
+            transition: border-color .15s, transform .15s;
+        }
+
+        .profile-btn:hover,
+        .profile-btn:focus-visible,
+        .profile-btn[aria-expanded="true"] {
+            border-color: var(--accent);
+            outline: none;
+        }
+
+        .profile-btn img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-menu {
+            position: absolute;
+            right: 0;
+            top: calc(100% + 8px);
+            z-index: 50;
+            width: 240px;
+            max-width: calc(100vw - 32px);
+            padding: 6px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--card);
+            box-shadow: 0 18px 40px rgba(0, 0, 0, .45);
+            animation: pd-in .14s ease-out;
+        }
+
+        .pm-head {
+            padding: 6px 10px 8px;
+            color: var(--sub);
+            font-size: .72rem;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+        .profile-menu a {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            padding: 9px 10px;
+            border-radius: 6px;
+            color: var(--text);
+            text-decoration: none;
+        }
+
+        .profile-menu a:hover,
+        .profile-menu a:focus-visible {
+            background: var(--inset);
+            outline: none;
+        }
+
+        .profile-menu a span {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.25;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .profile-menu small {
+            color: var(--sub);
+            font-size: .76rem;
+        }
+
+        .pm-logo {
+            width: 18px;
+            height: 18px;
+            flex: 0 0 18px;
+        }
+
+        .pm-ext {
+            width: 14px;
+            height: 14px;
+            color: var(--sub);
+        }
+
         /* Phone details dialog (opened from the header photo) */
         .phone-dialog {
             /* 100dvh = the part of the screen you can actually see on phones (100vh hides under the browser bars) */
@@ -1193,6 +1290,29 @@
             <div class="header-right">
                 <div class="pill pill-time" title="Time on the phone"><i data-lucide="clock"></i><span id="phone-time">–</span></div>
                 <div class="pill"><span class="dot" id="status-dot"></span><span id="status-text">Connecting…</span></div>
+                <div class="profile">
+                    <button class="profile-btn" type="button" id="profile-btn" title="Owner's profiles" aria-haspopup="true" aria-expanded="false" aria-controls="profile-menu">
+                        <img src="assets/avatar.jpg" alt="Owner's profiles" width="36" height="36">
+                    </button>
+                    <nav class="profile-menu" id="profile-menu" aria-label="Owner's profiles" hidden>
+                        <div class="pm-head">Find me on</div>
+                        <a href="https://github.com/whoisBugsbunny" target="_blank" rel="noopener noreferrer">
+                            <svg class="pm-logo" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 .5C5.65.5.5 5.65.5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.87-1.37-3.87-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.03 1.76 2.69 1.25 3.35.96.1-.75.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.18-3.09-.12-.29-.51-1.46.11-3.04 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.62 1.58.23 2.75.11 3.04.74.81 1.18 1.83 1.18 3.09 0 4.41-2.69 5.38-5.26 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/></svg>
+                            <span><b>GitHub</b><small>whoisBugsbunny</small></span>
+                            <i data-lucide="external-link" class="pm-ext"></i>
+                        </a>
+                        <a href="https://aekitsama.com" target="_blank" rel="noopener noreferrer">
+                            <i data-lucide="globe" class="pm-logo"></i>
+                            <span><b>Website</b><small>aekitsama.com</small></span>
+                            <i data-lucide="external-link" class="pm-ext"></i>
+                        </a>
+                        <a href="https://x.com/aekitsama" target="_blank" rel="noopener noreferrer">
+                            <svg class="pm-logo" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                            <span><b>X</b><small>@aekitsama</small></span>
+                            <i data-lucide="external-link" class="pm-ext"></i>
+                        </a>
+                    </nav>
+                </div>
             </div>
         </header>
 
@@ -1391,7 +1511,7 @@
         </div>
     </dialog>
 
-    <script src="assets/dashboard.bundle.js?v=121f5ba6aa"></script>
+    <script src="assets/dashboard.bundle.js?v=a67a1d0e56"></script>
     <script>
         const $ = (id) => document.getElementById(id);
         let lastStatsOk = 0;
@@ -2257,6 +2377,25 @@
                 clearInterval(deviceTimer);
                 document.body.classList.remove("pd-lock");
             });
+
+        // Owner profile menu: tap the avatar; closes on a tap outside, Esc, or after picking a link.
+        (() => {
+            const btn = $("profile-btn"), menu = $("profile-menu");
+            const setOpen = (open) => {
+                menu.hidden = !open;
+                btn.setAttribute("aria-expanded", String(open));
+            };
+            btn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                setOpen(menu.hidden);
+                if (!menu.hidden) menu.querySelector("a").focus();
+            });
+            document.addEventListener("click", (e) => { if (!menu.hidden && !menu.contains(e.target)) setOpen(false); });
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "Escape" && !menu.hidden) { setOpen(false); btn.focus(); }
+            });
+            menu.addEventListener("click", (e) => { if (e.target.closest("a")) setOpen(false); });
+        })();
 
         window.dashboardChart?.init();
         refreshStats();
