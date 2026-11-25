@@ -825,6 +825,58 @@
             min-width: 0;
         }
 
+        /* Small "money since start" chart: after fees vs before fees */
+        .equity-box {
+            margin: 14px 0 6px;
+            padding: 12px 14px 4px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            background: var(--inset);
+        }
+
+        .equity-head {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px 14px;
+        }
+
+        .equity-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px 14px;
+            font-size: .78rem;
+            color: var(--sub);
+        }
+
+        .equity-legend span {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .equity-legend i {
+            display: inline-block;
+            width: 14px;
+            height: 0;
+            border-top: 2px solid var(--accent);
+        }
+
+        .equity-legend i.nofee {
+            border-top: 2px dashed var(--slow);
+        }
+
+        .equity-legend b {
+            color: var(--text);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .equity-chart {
+            width: 100%;
+            height: 170px;
+        }
+
         .chart-toggle.range {
             font-weight: 700;
             min-width: 40px;
@@ -1779,6 +1831,14 @@
                 </div>
             </div>
 
+            <div class="equity-box">
+                <div class="equity-head">
+                    <div class="chart-title">Money since start</div>
+                    <div class="equity-legend" id="equity-legend"></div>
+                </div>
+                <div class="equity-chart" id="equity-chart" role="img" aria-label="The bot's money over time, after fees and before fees"></div>
+            </div>
+
             <div class="chart-toolbar">
                 <div class="chart-title">Price action</div>
                 <div class="chart-controls" id="chart-controls" role="group" aria-label="Chart overlays">
@@ -1894,7 +1954,7 @@
         </div>
     </dialog>
 
-    <script src="assets/dashboard.bundle.js?v=62cf9578e6"></script>
+    <script src="assets/dashboard.bundle.js?v=10d064975e"></script>
     <script>
         const $ = (id) => document.getElementById(id);
         let lastStatsOk = 0;
@@ -2488,6 +2548,7 @@
             const fastLabel = s.fast_label !== undefined ? s.fast_label : `SMA ${s.fast_n}`;
             const slowLabel = s.slow_label !== undefined ? s.slow_label : `SMA ${s.slow_n}`;
             drawChart(b.prices, b.trades, fastLabel, slowLabel, b.round_trips || []);
+            renderEquity(b.equity || [], s.start_cash);
             renderTrips(b.round_trips || [], b.summary, s.base);
         }
 
@@ -2649,6 +2710,25 @@
                 row.append(cell(resultCls, signedUsd(t.pnl), signedPct(t.pnl_pct) + (t.open ? (t.side === "short" ? " if covered now" : " if sold now") : "")));
                 body.append(row);
             }
+        }
+
+        // "Money since start": legend numbers here, the small chart in dashboard-chart.js.
+        function renderEquity(points, start) {
+            const legend = $("equity-legend");
+            legend.replaceChildren();
+            window.dashboardChart?.updateEquity(points, start);
+            if (!points.length) return;
+            const [, withFees, noFees] = points[points.length - 1];
+            const pctOf = (v) => signedPct((v / start - 1) * 100);
+            const item = (cls, label, v) => {
+                const span = el("span", {});
+                span.append(el("i", cls ? { class: cls } : {}), document.createTextNode(label + " "),
+                    el("b", { class: v > start ? "good-text" : v < start ? "bad-text" : "" }, `${usd(v)} (${pctOf(v)})`));
+                return span;
+            };
+            const feeCost = el("span", {});
+            feeCost.append(document.createTextNode("Fees cost "), el("b", {}, usd(Math.max(0, noFees - withFees))));
+            legend.append(item("", "After fees", withFees), item("nofee", "Before fees", noFees), feeCost);
         }
 
         function drawChart(points, trades, fastN, slowN, trips) {

@@ -482,4 +482,80 @@ function updateMarket(candles, book) {
     render();
 }
 
-window.dashboardChart = { init, update, updateMarket };
+// ---------- small "money since start" chart ----------
+let equityChart;
+
+function updateEquity(points, start) {
+    const element = document.getElementById("equity-chart");
+    if (!element) return;
+    if (!equityChart) {
+        equityChart = echarts.init(element, null, { renderer: "canvas" });
+        if ("ResizeObserver" in window) new ResizeObserver(() => equityChart.resize()).observe(element);
+        else window.addEventListener("resize", () => equityChart.resize());
+    }
+    const sub = themeColor("--sub");
+    const border = themeColor("--border");
+    const money = value => "$" + Number(value).toLocaleString(undefined, { maximumFractionDigits: 0 });
+    const pctOf = value => ((value / start - 1) * 100 >= 0 ? "+" : "−") + Math.abs((value / start - 1) * 100).toFixed(2) + "%";
+    equityChart.setOption({
+        animation: false,
+        grid: { left: 8, right: 64, top: 10, bottom: 22 },
+        tooltip: {
+            trigger: "axis",
+            backgroundColor: themeColor("--card"),
+            borderColor: border,
+            textStyle: { color: themeColor("--text"), fontSize: 12 },
+            formatter(params) {
+                const items = Array.isArray(params) ? params : [params];
+                const when = new Date(Number(items[0]?.axisValue)).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+                return `<strong>${when}</strong>` + items.map(item =>
+                    `<div>${item.marker}${item.seriesName}: <b>${money(item.value[1])}</b> (${pctOf(item.value[1])})</div>`).join("");
+            },
+        },
+        xAxis: {
+            type: "time",
+            axisLine: { lineStyle: { color: border } },
+            axisTick: { show: false },
+            axisLabel: { color: sub, fontSize: 10, hideOverlap: true },
+            splitLine: { show: false },
+        },
+        yAxis: {
+            type: "value",
+            position: "right",
+            scale: true,
+            splitNumber: 3,
+            axisLabel: { color: sub, fontSize: 10, formatter: money },
+            splitLine: { lineStyle: { color: border, type: "dashed" } },
+        },
+        series: [{
+            name: "After fees",
+            type: "line",
+            step: "end",
+            showSymbol: false,
+            data: points.map(p => [Number(p[0]) * 1000, p[1]]),
+            lineStyle: { color: themeColor("--accent"), width: 2 },
+            itemStyle: { color: themeColor("--accent") },
+            areaStyle: { color: "rgba(198, 239, 99, .06)" },
+            markLine: {
+                silent: true,
+                symbol: "none",
+                data: [{ yAxis: start }],
+                lineStyle: { color: sub, type: "dotted", width: 1 },
+                label: { color: sub, fontSize: 9, formatter: "start", position: "insideStartTop" },
+            },
+        }, {
+            name: "Before fees",
+            type: "line",
+            step: "end",
+            showSymbol: false,
+            data: points.map(p => [Number(p[0]) * 1000, p[2]]),
+            lineStyle: { color: themeColor("--slow"), width: 1.5, type: "dashed" },
+            itemStyle: { color: themeColor("--slow") },
+        }],
+        graphic: points.length ? [] : [{
+            type: "text", left: "center", top: "middle", style: { text: "No trades yet", fill: sub, fontSize: 12 },
+        }],
+    }, { notMerge: true });
+}
+
+window.dashboardChart = { init, update, updateMarket, updateEquity };
