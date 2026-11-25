@@ -383,7 +383,7 @@
 
         .chart {
             width: 100%;
-            height: 270px;
+            height: 340px;
             display: block;
             min-width: 0;
         }
@@ -418,6 +418,53 @@
         td.num,
         th.num {
             text-align: right;
+        }
+
+        td .sub {
+            display: block;
+            color: var(--sub);
+            font-size: .74rem;
+            margin-top: 2px;
+        }
+
+        tr.open-trip td {
+            background: color-mix(in srgb, var(--accent) 6%, transparent);
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 1px 7px;
+            border-radius: 999px;
+            font-size: .68rem;
+            font-weight: 700;
+            letter-spacing: .04em;
+            color: var(--bg);
+            background: var(--accent);
+            vertical-align: 1px;
+        }
+
+        .result {
+            font-weight: 700;
+        }
+
+        .trip-summary {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 0 0 10px;
+        }
+
+        .trip-summary span {
+            padding: 5px 10px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            font-size: .8rem;
+            color: var(--sub);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .trip-summary b {
+            color: var(--text);
         }
 
         footer {
@@ -492,7 +539,7 @@
             }
 
             .chart {
-                height: 230px;
+                height: 300px;
             }
         }
     </style>
@@ -602,16 +649,17 @@
                 <div class="chart" id="chart" role="img" aria-label="Interactive price line chart"></div>
             </div>
 
-            <h2>Recent trades</h2>
+            <h2>Trades: each buy with its sell</h2>
+            <div class="trip-summary" id="trip-summary"></div>
             <div class="table-wrap">
                 <table>
                     <thead>
                         <tr>
-                            <th>Time</th>
-                            <th>Side</th>
-                            <th class="num">Price</th>
-                            <th class="num">Amount</th>
-                            <th>Why</th>
+                            <th>#</th>
+                            <th>Bought</th>
+                            <th>Sold</th>
+                            <th class="num">Held</th>
+                            <th class="num">Result (after fees)</th>
                         </tr>
                     </thead>
                     <tbody id="trades"></tbody>
@@ -774,7 +822,7 @@
         // ---------- bot ----------
         async function refreshBot() {
             try {
-                const b = await api(`/api/bots/${BOT}?points=240`);
+                const b = await api(`/api/bots/${BOT}?points=600`);
                 renderBot(b);
             } catch (e) {
                 $("bot-notice").replaceChildren(el("div", { class: "notice" },
@@ -793,7 +841,9 @@
             const notices = [];
             if (s.last_error) notices.push(el("div", { class: "notice error" }, `Last error (${ago(s.last_error_at)}): ${s.last_error}`));
             if (s.warmup_left > 0) {
+                const afterGap = s.last_gap_reset && Date.now() / 1000 - s.last_gap_reset < (s.slow_n + 5) * s.interval_s;
                 notices.push(el("div", { class: "notice" },
+                    (afterGap ? "Prices stopped for a while, so the averages restarted from fresh data. " : "") +
                     `Warming up: ${s.warmup_left} more price${s.warmup_left > 1 ? "s" : ""} needed before the slow average is ready (about ${fmtDuration(s.warmup_left * s.interval_s)}).`));
             }
             $("bot-notice").replaceChildren(...notices);
@@ -807,33 +857,70 @@
             $("bot-position").textContent = s.qty > 0 ? `${s.qty.toFixed(6)} ${s.base}` : "Cash";
             $("bot-trades").textContent = s.trades;
 
-            drawChart(b.prices, b.trades, s.fast_n, s.slow_n);
-            renderTrades(b.trades, s.base);
+            drawChart(b.prices, b.trades, s.fast_n, s.slow_n, b.round_trips || []);
+            renderTrips(b.round_trips || [], b.summary, s.base);
         }
 
-        function renderTrades(trades, base) {
+        const signedUsd = (v) => (v >= 0 ? "+" : "−") + usd(Math.abs(v));
+        const signedPct = (v) => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(2) + "%";
+        const tradeTime = (ts) => new Date(ts * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+
+        function cell(cls, main, sub) {
+            const td = el("td", cls ? { class: cls } : {});
+            td.append(main instanceof Node ? main : document.createTextNode(main));
+            if (sub) td.append(el("span", { class: "sub" }, sub));
+            return td;
+        }
+
+        function renderTrips(trips, summary, base) {
+            const box = $("trip-summary");
+            box.replaceChildren();
+            if (summary && summary.closed) {
+                const stat = (label, value, cls) => {
+                    const span = el("span", {}, label + " ");
+                    span.append(el("b", cls ? { class: cls } : {}, value));
+                    return span;
+                };
+                const realized = summary.realized_pnl;
+                box.append(
+                    stat("Completed", String(summary.closed)),
+                    stat("Wins", String(summary.wins), "good-text"),
+                    stat("Losses", String(summary.losses), "bad-text"),
+                    stat("Win rate", summary.win_rate.toFixed(0) + "%"),
+                    stat("Realized", signedUsd(realized), realized >= 0 ? "good-text" : "bad-text"),
+                );
+            }
+
             const body = $("trades");
             body.replaceChildren();
-            if (!trades.length) {
+            if (!trips.length) {
                 const row = el("tr");
-                row.append(el("td", { colspan: 5, class: "small" }, "No trades yet. The bot trades when the fast average crosses the slow one."));
+                row.append(el("td", { colspan: 5, class: "small" }, "No trades yet. The bot buys when the fast average crosses above the slow one."));
                 body.append(row);
                 return;
             }
-            for (const t of trades) {
-                const row = el("tr");
-                row.append(el("td", {}, new Date(t.ts * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })));
-                row.append(el("td", { class: t.side === "BUY" ? "good-text" : "bad-text" }, t.side));
-                row.append(el("td", { class: "num" }, usd(t.price)));
-                row.append(el("td", { class: "num" }, `${t.qty.toFixed(6)} ${base}`));
-                row.append(el("td", { class: "small" }, t.reason || ""));
+            const total = trips.filter(t => !t.open).length;
+            let number = total;
+            for (const t of trips) {
+                const row = el("tr", t.open ? { class: "open-trip" } : {});
+                const resultCls = "num result " + (t.pnl > 0 ? "good-text" : t.pnl < 0 ? "bad-text" : "");
+                const amount = `${t.qty.toFixed(6)} ${base}`;
+                row.append(cell("small", t.open ? el("span", { class: "tag" }, "OPEN") : String(number--)));
+                row.append(cell("", usd(t.buy_price), `${tradeTime(t.buy_ts)} · ${amount}`));
+                if (t.open) {
+                    row.append(cell("", "Still holding", `worth ${usd(t.sell_price)} now`));
+                } else {
+                    row.append(cell("", usd(t.sell_price), tradeTime(t.sell_ts)));
+                }
+                row.append(cell("num", fmtDuration(t.duration_s)));
+                row.append(cell(resultCls, signedUsd(t.pnl), signedPct(t.pnl_pct) + (t.open ? " if sold now" : "")));
                 body.append(row);
             }
         }
 
-        function drawChart(points, trades, fastN, slowN) {
+        function drawChart(points, trades, fastN, slowN, trips) {
             // If the chart bundle failed to load, keep the rest of the dashboard working.
-            window.dashboardChart?.update(points, trades, fastN, slowN);
+            window.dashboardChart?.update(points, trades, fastN, slowN, trips);
         }
 
         window.dashboardChart?.init();

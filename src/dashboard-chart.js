@@ -7,8 +7,11 @@ import { Activity, CircleDot, Crosshair, createIcons } from "lucide";
 echarts.use([LineChart, ScatterChart, DataZoomComponent, GridComponent, MarkLineComponent, TooltipComponent, CanvasRenderer]);
 
 const overlays = { sma: true, trades: true, levels: true };
+const DEFAULT_WINDOW_MS = 2 * 60 * 60 * 1000; // open on the last 2 hours
 let chart;
-let chartData = { points: [], trades: [], fastN: 0, slowN: 0 };
+let chartData = { points: [], trades: [], fastN: 0, slowN: 0, trips: [] };
+let userZoomed = false; // once the user zooms or pans, stop following the latest data
+let applyingZoom = false;
 
 function themeColor(name) {
     return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -93,8 +96,50 @@ function seriesWithGaps(points, key, gapMs) {
     return data;
 }
 
+// One line per completed buy→sell (green = profit, red = loss); the open trade runs to "now", dashed.
+function tripLines(trips, end) {
+    return trips.map(trip => {
+        const color = themeColor(trip.pnl >= 0 ? "--good" : "--bad");
+        const sellTime = trip.sell_ts ? Number(trip.sell_ts) * 1000 : end;
+        return [{
+            coord: [Number(trip.buy_ts) * 1000, trip.buy_price],
+            lineStyle: { color, width: 2.5, type: trip.open ? "dashed" : "solid", opacity: .9 },
+            // Labels would tilt along the line and get hard to read; the table has the exact numbers.
+            label: { show: false },
+        }, {
+            coord: [sellTime, trip.sell_price],
+        }];
+    });
+}
+
+function tradeMarkers(trades, side) {
+    const buy = side === "BUY";
+    const color = themeColor(buy ? "--good" : "--bad");
+    return {
+        name: buy ? "Buy" : "Sell",
+        type: "scatter",
+        z: 10,
+        data: trades.filter(trade => trade.side === side).map(trade => [Number(trade.ts) * 1000, trade.price]),
+        // A pin whose tip sits exactly on the trade price.
+        symbol: "pin",
+        symbolSize: 30,
+        symbolOffset: [0, "-50%"],
+        itemStyle: { color, borderColor: themeColor("--bg"), borderWidth: 1.5 },
+        label: {
+            show: true,
+            position: "inside",
+            offset: [0, -3],
+            formatter: buy ? "B" : "S",
+            color: themeColor("--bg"),
+            fontSize: 11,
+            fontWeight: "bold",
+        },
+        emphasis: { scale: 1.2 },
+    };
+}
+
 function buildOption() {
-    const { points, trades, fastN, slowN } = chartData;
+    const { points, trades, fastN, slowN, trips } = chartData;
     const accent = themeColor("--accent");
     const sub = themeColor("--sub");
     const border = themeColor("--border");
@@ -121,7 +166,7 @@ function buildOption() {
             silent: true,
             symbol: "none",
             animation: false,
-            data: levels.map(level => {
+            data: [...levels.map(level => {
                 const color = level.kind === "Support" ? themeColor("--good") : themeColor("--warn");
                 return {
                     name: level.kind,
@@ -138,7 +183,7 @@ function buildOption() {
                         position: "insideEndTop",
                     },
                 };
-            }),
+            }), ...(overlays.trades ? tripLines(trips.filter(trip => Number(trip.buy_ts) * 1000 >= start), end) : [])],
         },
     }];
 
@@ -162,32 +207,12 @@ function buildOption() {
 
     if (overlays.trades) {
         const visibleTrades = trades.filter(trade => Number(trade.ts) * 1000 >= start && Number(trade.ts) * 1000 <= end + 60000);
-        for (const side of ["BUY", "SELL"]) {
-            const buy = side === "BUY";
-            series.push({
-                name: buy ? "Buy" : "Sell",
-                type: "scatter",
-                data: visibleTrades.filter(trade => trade.side === side)
-                    .map(trade => [Number(trade.ts) * 1000, trade.price]),
-                symbol: "triangle",
-                symbolRotate: buy ? 0 : 180,
-                symbolSize: 10,
-                itemStyle: { color: themeColor(buy ? "--good" : "--bad"), borderColor: themeColor("--card"), borderWidth: 1 },
-                label: {
-                    show: true,
-                    position: "top",
-                    formatter: buy ? "B" : "S",
-                    color: themeColor(buy ? "--good" : "--bad"),
-                    fontSize: 9,
-                    fontWeight: "bold",
-                },
-            });
-        }
+        series.push(tradeMarkers(visibleTrades, "BUY"), tradeMarkers(visibleTrades, "SELL"));
     }
 
     return {
         animation: false,
-        grid: { left: 8, right: 68, top: 16, bottom: 24, containLabel: true },
+        grid: { left: 8, right: 68, top: 34, bottom: 58, containLabel: true },
         tooltip: {
             trigger: "axis",
             axisPointer: { type: "cross", lineStyle: { color: sub, opacity: .65 } },
@@ -221,10 +246,23 @@ function buildOption() {
             splitLine: { lineStyle: { color: border, type: "dashed" } },
         },
         dataZoom: [{
+            id: "zoom-inside",
             type: "inside",
             zoomOnMouseWheel: "shift",
             moveOnMouseMove: true,
             zoomOnTouchPinch: true,
+        }, {
+            id: "zoom-slider",
+            type: "slider",
+            height: 22,
+            bottom: 8,
+            borderColor: border,
+            fillerColor: "rgba(198, 239, 99, .12)",
+            handleStyle: { color: themeColor("--card"), borderColor: sub },
+            moveHandleStyle: { color: border },
+            dataBackground: { lineStyle: { color: sub, opacity: .5 }, areaStyle: { opacity: 0 } },
+            textStyle: { color: sub, fontSize: 10 },
+            labelFormatter: value => new Date(value).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         }],
         graphic: points.length < 2 ? [{
             type: "text",
@@ -239,6 +277,18 @@ function buildOption() {
 function render() {
     if (!chart) return;
     chart.setOption(buildOption(), { replaceMerge: ["series"] });
+    followLatest();
+}
+
+// Until the user zooms or pans, keep the view on the most recent DEFAULT_WINDOW_MS.
+function followLatest() {
+    const { points } = chartData;
+    if (userZoomed || points.length < 2) return;
+    const first = Number(points[0].ts) * 1000;
+    const last = Number(points[points.length - 1].ts) * 1000;
+    applyingZoom = true;
+    chart.dispatchAction({ type: "dataZoom", startValue: Math.max(first, last - DEFAULT_WINDOW_MS), endValue: last });
+    applyingZoom = false;
 }
 
 function init() {
@@ -246,6 +296,9 @@ function init() {
     if (!element || chart) return;
 
     chart = echarts.init(element, null, { renderer: "canvas" });
+    chart.on("datazoom", () => {
+        if (!applyingZoom) userZoomed = true;
+    });
     createIcons({ icons: { Activity, CircleDot, Crosshair } });
     document.getElementById("chart-controls").addEventListener("click", event => {
         const button = event.target.closest("[data-overlay]");
@@ -264,8 +317,8 @@ function init() {
     render();
 }
 
-function update(points, trades, fastN, slowN) {
-    chartData = { points: points || [], trades: trades || [], fastN, slowN };
+function update(points, trades, fastN, slowN, trips) {
+    chartData = { points: points || [], trades: trades || [], fastN, slowN, trips: trips || [] };
     render();
 }
 
