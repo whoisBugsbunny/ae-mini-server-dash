@@ -19,6 +19,7 @@ const PANELS = { price: { top: 34, height: "50%" }, volume: { top: "66%", height
 const AXES = [0, 1, 2];
 let chart;
 let chartData = { points: [], trades: [], fastN: 0, slowN: 0, trips: [], candles: [], book: [] };
+const BUY_SIDES = new Set(["BUY", "COVER"]); // SELL and SHORT are sells
 let userZoomed = false; // once the user zooms or pans, stop following the latest data
 let applyingZoom = false;
 
@@ -109,14 +110,14 @@ function seriesWithGaps(points, key, gapMs) {
 function tripLines(trips, end) {
     return trips.map(trip => {
         const color = themeColor(trip.pnl >= 0 ? "--good" : "--bad");
-        const sellTime = trip.sell_ts ? Number(trip.sell_ts) * 1000 : end;
+        const exitTime = trip.exit_ts ? Number(trip.exit_ts) * 1000 : end;
         return [{
-            coord: [Number(trip.buy_ts) * 1000, trip.buy_price],
+            coord: [Number(trip.entry_ts) * 1000, trip.entry_price],
             lineStyle: { color, width: 2.5, type: trip.open ? "dashed" : "solid", opacity: .9 },
             // Labels would tilt along the line and get hard to read; the table has the exact numbers.
             label: { show: false },
         }, {
-            coord: [sellTime, trip.sell_price],
+            coord: [exitTime, trip.exit_price],
         }];
     });
 }
@@ -128,7 +129,8 @@ function tradeMarkers(trades, side) {
         name: buy ? "Buy" : "Sell",
         type: "scatter",
         z: 10,
-        data: trades.filter(trade => trade.side === side).map(trade => [Number(trade.ts) * 1000, trade.price]),
+        // A short is a sell and a cover is a buy, so they share the S / B pins.
+        data: trades.filter(trade => (BUY_SIDES.has(trade.side) ? "BUY" : "SELL") === side).map(trade => [Number(trade.ts) * 1000, trade.price]),
         // A pin whose tip sits exactly on the trade price.
         symbol: "pin",
         symbolSize: 30,
@@ -192,7 +194,7 @@ function buildOption() {
                         position: "insideEndTop",
                     },
                 };
-            }), ...(overlays.trades ? tripLines(trips.filter(trip => Number(trip.buy_ts) * 1000 >= start), end) : [])],
+            }), ...(overlays.trades ? tripLines(trips.filter(trip => Number(trip.entry_ts) * 1000 >= start), end) : [])],
         },
     }];
 

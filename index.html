@@ -978,15 +978,15 @@
             </div>
             <div class="small" id="book-source"></div>
 
-            <h2><i data-lucide="arrow-left-right"></i>Trades: each buy with its sell</h2>
+            <h2><i data-lucide="arrow-left-right"></i>Trades: each entry with its exit</h2>
             <div class="trip-summary" id="trip-summary"></div>
             <div class="table-wrap">
                 <table>
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>Bought</th>
-                            <th>Sold</th>
+                            <th>Entry</th>
+                            <th>Exit</th>
                             <th class="num">Held</th>
                             <th class="num">Result (after fees)</th>
                         </tr>
@@ -999,7 +999,7 @@
         <footer>Self-hosted on an old phone · refreshes automatically</footer>
     </div>
 
-    <script src="assets/dashboard.bundle.js?v=58d5147593"></script>
+    <script src="assets/dashboard.bundle.js?v=372f002441"></script>
     <script>
         const $ = (id) => document.getElementById(id);
         let lastStatsOk = 0;
@@ -1011,10 +1011,12 @@
             "ae-api": ["Dashboard API", "server-cog"],
             "ae-bot-paper-sma": ["SMA bot", "chart-line"],
             "ae-bot-flow": ["Flow bot", "waves"],
+            "ae-bot-inverse": ["Inverse SMA bot", "arrow-down-up"],
             "ae-market": ["Market data", "chart-candlestick"],
             "ssh-agent": ["SSH agent", "key-round"],
         };
-        const BOT_ICONS = { "paper-sma": "chart-line", "paper-flow": "waves" };
+        const BOT_ICONS = { "paper-sma": "chart-line", "paper-flow": "waves", "paper-sma-inverse": "arrow-down-up" };
+        const isShort = (s) => s.direction === "short";
         const icon = (name, cls) => window.dashboardIcon ? window.dashboardIcon(name, cls) : document.createTextNode("");
 
         // Which bot the Bots section shows; remembered per browser (storage can be blocked, so guard it).
@@ -1191,7 +1193,7 @@
                 title.append(icon(BOT_ICONS[b.bot] || "bot", "icon"), document.createTextNode(s.title || "SMA bot"));
                 tab.append(title);
                 const pnl = s.pnl_pct == null ? "" : ` · ${(s.pnl_pct >= 0 ? "+" : "") + s.pnl_pct.toFixed(2)}%`;
-                tab.append(el("span", {}, `${s.qty > 0 ? "holding " + s.base : "in cash"} · ${s.trades} trades${pnl}`));
+                tab.append(el("span", {}, `${s.qty > 0 ? (isShort(s) ? "short " : "holding ") + s.base : "in cash"} · ${s.trades} trades${pnl}`));
                 tab.addEventListener("click", () => selectBot(b.bot));
                 box.append(tab);
             }
@@ -1242,7 +1244,7 @@
                 pnl.textContent = (s.pnl_pct >= 0 ? "+" : "") + s.pnl_pct.toFixed(2) + "%";
                 pnl.className = "value " + (s.pnl_pct > 0 ? "good-text" : s.pnl_pct < 0 ? "bad-text" : "");
             }
-            $("bot-position").textContent = s.qty > 0 ? `${s.qty.toFixed(6)} ${s.base}` : "Cash";
+            $("bot-position").textContent = s.qty > 0 ? `${isShort(s) ? "Short " : ""}${s.qty.toFixed(6)} ${s.base}` : "Cash";
             $("bot-trades").textContent = s.trades;
 
             const fastLabel = s.fast_label !== undefined ? s.fast_label : `SMA ${s.fast_n}`;
@@ -1342,14 +1344,14 @@
                 const resultCls = "num result " + (t.pnl > 0 ? "good-text" : t.pnl < 0 ? "bad-text" : "");
                 const amount = `${t.qty.toFixed(6)} ${base}`;
                 row.append(cell("small", t.open ? el("span", { class: "tag" }, "OPEN") : String(number--)));
-                row.append(cell("", usd(t.buy_price), `${tradeTime(t.buy_ts)} · ${amount}`));
+                row.append(cell("", `${t.side === "short" ? "Short" : "Buy"} ${usd(t.entry_price)}`, `${tradeTime(t.entry_ts)} · ${amount}`));
                 if (t.open) {
-                    row.append(cell("", "Still holding", `worth ${usd(t.sell_price)} now`));
+                    row.append(cell("", t.side === "short" ? "Still short" : "Still holding", `price ${usd(t.exit_price)} now`));
                 } else {
-                    row.append(cell("", usd(t.sell_price), tradeTime(t.sell_ts)));
+                    row.append(cell("", `${t.side === "short" ? "Cover" : "Sell"} ${usd(t.exit_price)}`, tradeTime(t.exit_ts)));
                 }
                 row.append(cell("num", fmtDuration(t.duration_s)));
-                row.append(cell(resultCls, signedUsd(t.pnl), signedPct(t.pnl_pct) + (t.open ? " if sold now" : "")));
+                row.append(cell(resultCls, signedUsd(t.pnl), signedPct(t.pnl_pct) + (t.open ? (t.side === "short" ? " if covered now" : " if sold now") : "")));
                 body.append(row);
             }
         }
