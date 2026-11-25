@@ -1003,6 +1003,121 @@
             }
         }
 
+        /* Temperature card */
+        .yellow-text { color: var(--yellow); }
+        .orange-text { color: var(--orange); }
+
+        .temp-span {
+            margin-left: auto;
+            padding: 1px 7px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            color: var(--sub);
+            font-size: .7rem;
+            font-weight: 600;
+        }
+
+        .temp-tag {
+            margin-left: 7px;
+            color: var(--sub);
+            font-size: .72rem;
+            font-weight: 600;
+            letter-spacing: .06em;
+        }
+
+        .temp-range {
+            margin: 10px 0 6px;
+        }
+
+        .temp-track {
+            position: relative;
+            height: 6px;
+            border-radius: 99px;
+            background: var(--track);
+        }
+
+        .temp-fill {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            border-radius: 99px;
+            background: var(--accent);
+            opacity: .55;
+        }
+
+        .temp-fill.yellow { background: var(--yellow); }
+        .temp-fill.orange { background: var(--orange); }
+        .temp-fill.bad { background: var(--bad); }
+
+        .temp-avg {
+            position: absolute;
+            top: -3px;
+            width: 2px;
+            height: 12px;
+            margin-left: -1px;
+            border-radius: 1px;
+            background: var(--sub);
+        }
+
+        .temp-now {
+            position: absolute;
+            top: 50%;
+            width: 12px;
+            height: 12px;
+            margin: -6px 0 0 -6px;
+            border-radius: 50%;
+            background: var(--text);
+            border: 2px solid var(--card);
+            box-shadow: 0 0 0 1px var(--sub);
+            transition: left .4s;
+        }
+
+        .temp-legend {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 6px;
+            color: var(--sub);
+            font-size: .74rem;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .temp-chips {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .temp-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 2px 8px;
+            border-radius: 6px;
+            background: var(--inset);
+            border: 1px solid var(--border);
+            color: var(--sub);
+            font-size: .76rem;
+        }
+
+        .temp-chip b {
+            color: var(--text);
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .temp-chip svg {
+            width: 13px;
+            height: 13px;
+        }
+
+        .temp-chip.hot {
+            border-color: var(--bad);
+        }
+
+        .temp-chip.hot b {
+            color: var(--bad);
+        }
+
         /* Owner profile button + links menu (top right) */
         .profile {
             position: relative;
@@ -1448,11 +1563,17 @@
                 </div>
                 <div class="small" id="disk-free"></div>
             </div>
-            <div class="card">
-                <div class="label"><i data-lucide="thermometer"></i>Temperature</div>
-                <div class="value" id="temp-cpu">–</div>
-                <div class="small" id="temp-more"></div>
-                <div class="small" id="temp-range"></div>
+            <div class="card temp-card">
+                <div class="label"><i data-lucide="thermometer"></i>Temperature<span class="temp-span" id="temp-span" hidden></span></div>
+                <div class="value"><span id="temp-cpu">–</span><span class="temp-tag">CPU</span></div>
+                <div class="temp-range" id="temp-range" hidden>
+                    <div class="temp-track"><div class="temp-fill" id="temp-fill"></div><div class="temp-avg" id="temp-avg"></div><div class="temp-now" id="temp-now"></div></div>
+                    <div class="temp-legend"><span id="temp-low"></span><span id="temp-mid"></span><span id="temp-high"></span></div>
+                </div>
+                <div class="temp-chips">
+                    <span class="temp-chip" id="temp-bat" title="Battery temperature"><i data-lucide="battery"></i>Battery<b>–</b></span>
+                    <span class="temp-chip" id="temp-board" title="Board (crystal) temperature"><i data-lucide="cpu"></i>Board<b>–</b></span>
+                </div>
             </div>
             <div class="card" id="battery-card">
                 <div class="label"><i data-lucide="battery" id="battery-icon"></i>Battery<span class="card-alert" id="bat-alert" hidden></span></div>
@@ -1800,33 +1921,7 @@
                 $("disk-free")
                     .textContent = `${fmtBytes(k.free)} free`;
 
-                const t = s.temps || {};
-                const cpu = $("temp-cpu");
-                cpu.textContent = t.cpu_c != null ? `${t.cpu_c} °C` : "–";
-                cpu.className = "value" + (t.cpu_c >= 70 ? " bad-text" : "");
-                const extra = [];
-                if (t.battery_c != null) extra.push(`Battery ${t.battery_c} °C`);
-                if (t.board_c != null) extra.push(`Board ${t.board_c} °C`);
-                $("temp-more")
-                    .textContent = "CPU · " + extra.join(" · ");
-                if (t.battery_c >= 45) $("temp-more")
-                    .className = "small bad-text";
-                else $("temp-more")
-                    .className = "small";
-
-                // Lowest / average / highest over the last 24 h (one reading per minute, stored by the API).
-                const r = s.temps_24h;
-                const range = $("temp-range");
-                if (r && r.cpu_c) {
-                    const span = r.hours >= 23.5 ? "24h" : `Last ${r.hours < 1 ? Math.max(1, Math.round(r.hours * 60)) + " min" : r.hours.toFixed(0) + "h"}`;
-                    range.textContent = `${span} CPU: low ${r.cpu_c.low} · avg ${r.cpu_c.avg} · high ${r.cpu_c.high} °C`;
-                    range.className = "small" + (r.cpu_c.high >= 70 ? " bad-text" : "");
-                    const line = (name, v) => v ? `${name}: low ${v.low} · avg ${v.avg} · high ${v.high} °C` : null;
-                    range.title = [`${span} (one reading per minute)`, line("CPU", r.cpu_c),
-                        line("Battery", r.battery_c), line("Board", r.board_c)].filter(Boolean).join("\n");
-                } else {
-                    range.textContent = "";
-                }
+                renderTemps(s.temps || {}, s.temps_24h);
 
                 renderQr(s.ip);
                 renderWifi(s.wifi);
@@ -1837,6 +1932,44 @@
                 // status pill shows the problem; keep the last good numbers on screen
             }
             renderStatus();
+        }
+
+        // Temperature card: big CPU number, a low→high range bar (tick = average, dot = now), battery/board chips.
+        // Colour by heat: lime < 45 °C < yellow < 60 < orange < 70 < red (phone CPUs throttle around 70–80 °C).
+        const tempLevel = (c) => c >= 70 ? "bad" : c >= 60 ? "orange" : c >= 45 ? "yellow" : "";
+        function renderTemps(t, r) {
+            const deg = (v) => v != null ? `${Number(v).toFixed(1)}°` : "–";
+            $("temp-cpu").textContent = t.cpu_c != null ? `${t.cpu_c} °C` : "–";
+            $("temp-cpu").className = { bad: "bad-text", orange: "orange-text", yellow: "yellow-text" }[tempLevel(t.cpu_c)] || "";
+            const chip = (id, v, hotAt) => {
+                $(id).querySelector("b").textContent = deg(v);
+                $(id).classList.toggle("hot", v != null && v >= hotAt);
+            };
+            chip("temp-bat", t.battery_c, 45);   // batteries shouldn't run hot (swelling risk)
+            chip("temp-board", t.board_c, 60);
+
+            const c = r && r.cpu_c;
+            $("temp-range").hidden = !c;
+            $("temp-span").hidden = !c;
+            if (!c) return;
+            const span = r.hours >= 23.5 ? "24h" : r.hours < 1 ? `${Math.max(1, Math.round(r.hours * 60))} min` : `${r.hours.toFixed(0)}h`;
+            $("temp-span").textContent = span;
+            const now = t.cpu_c ?? c.avg;
+            // Scale the bar to the day's range (plus a little room) so small changes are still visible.
+            const lo = Math.min(c.low, now) - 1, hi = Math.max(c.high, now) + 1;
+            const at = (v) => ((v - lo) / (hi - lo) * 100).toFixed(1) + "%";
+            const fill = $("temp-fill");
+            fill.style.left = at(c.low);
+            fill.style.right = `calc(100% - ${at(c.high)})`;
+            fill.className = "temp-fill " + tempLevel(c.high);
+            $("temp-avg").style.left = at(c.avg);
+            $("temp-now").style.left = at(now);
+            $("temp-low").textContent = `↓ ${deg(c.low)}`;
+            $("temp-mid").textContent = `avg ${deg(c.avg)}`;
+            $("temp-high").textContent = `↑ ${deg(c.high)}`;
+            const line = (name, v) => v ? `${name}: low ${v.low} · avg ${v.avg} · high ${v.high} °C` : null;
+            $("temp-range").title = [`Last ${span} (one reading per minute). Dot = now, tick = average.`,
+                line("CPU", c), line("Battery", r.battery_c), line("Board", r.board_c)].filter(Boolean).join("\n");
         }
 
         // Battery from Termux:API. A server phone should stay plugged in, so "unplugged" is a warning,
