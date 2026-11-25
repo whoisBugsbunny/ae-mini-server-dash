@@ -1005,6 +1005,12 @@
             flex: 0 0 18px;
         }
 
+        .pm-sep {
+            margin: 5px 8px;
+            border: 0;
+            border-top: 1px solid var(--border);
+        }
+
         .pm-ext {
             width: 14px;
             height: 14px;
@@ -1311,6 +1317,12 @@
                             <span><b>X</b><small>@aekitsama</small></span>
                             <i data-lucide="external-link" class="pm-ext"></i>
                         </a>
+                        <hr class="pm-sep">
+                        <a href="https://github.com/whoisBugsbunny/ae-mini-server-dash" target="_blank" rel="noopener noreferrer">
+                            <i data-lucide="code" class="pm-logo"></i>
+                            <span><b>Dashboard code</b><small>ae-mini-server-dash</small></span>
+                            <i data-lucide="external-link" class="pm-ext"></i>
+                        </a>
                     </nav>
                 </div>
             </div>
@@ -1511,7 +1523,7 @@
         </div>
     </dialog>
 
-    <script src="assets/dashboard.bundle.js?v=a67a1d0e56"></script>
+    <script src="assets/dashboard.bundle.js?v=6b8bf2371a"></script>
     <script>
         const $ = (id) => document.getElementById(id);
         let lastStatsOk = 0;
