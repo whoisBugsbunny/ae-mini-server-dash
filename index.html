@@ -1473,14 +1473,16 @@
         }
 
         // One colour scale for every usage bar (CPU, cores, RAM, storage; battery uses how empty it is).
-        function barLevel(pct) {
-            return pct >= 90 ? "bad" : pct >= 75 ? "orange" : pct >= 60 ? "yellow" : "";
+        function barLevel(pct, [yellow, orange, red] = [60, 75, 90]) {
+            return pct >= red ? "bad" : pct >= orange ? "orange" : pct >= yellow ? "yellow" : "";
         }
-        function setBar(id, pct) {
+        function setBar(id, pct, levels) {
             const bar = $(id);
             bar.firstElementChild.style.width = Math.min(100, Math.max(0, pct)) + "%";
-            bar.className = ("bar " + barLevel(pct)).trim();
+            bar.className = ("bar " + barLevel(pct, levels)).trim();
         }
+        // Android keeps RAM ~70–75% full on purpose (it frees memory when needed), so RAM warns later.
+        const RAM_LEVELS = [85, 92, 96];
 
         async function api(path) {
             const ctrl = new AbortController();
@@ -1541,7 +1543,7 @@
                     const used = m.total - m.available;
                     $("mem")
                         .textContent = `${fmtBytes(used)} / ${fmtBytes(m.total)}`;
-                    setBar("mem-bar", used / m.total * 100);
+                    setBar("mem-bar", used / m.total * 100, RAM_LEVELS);
                     $("swap")
                         .textContent = m.swap_total ?
                         `Swap ${fmtBytes(m.swap_total - m.swap_free)} / ${fmtBytes(m.swap_total)} · ${fmtBytes(m.available)} free` :
