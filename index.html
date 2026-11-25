@@ -1923,6 +1923,12 @@
             document.body.classList.remove("pd-lock");
         });
 
+        // Preview copy (served at /next/ by deploy.sh next): label it so it's never mistaken for the live page.
+        if (location.pathname.startsWith("/next")) {
+            document.title = "PREVIEW · " + document.title;
+            $("status-text").parentElement.before(el("div", { class: "pill", style: "color:var(--bg);background:var(--warn);border-color:var(--warn)" }, "PREVIEW"));
+        }
+
         window.dashboardChart?.init();
         refreshStats();
         refreshBot();
