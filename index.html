@@ -988,6 +988,7 @@
                             <th>Entry</th>
                             <th>Exit</th>
                             <th class="num">Held</th>
+                            <th class="num">Before fees</th>
                             <th class="num">Result (after fees)</th>
                         </tr>
                     </thead>
@@ -1327,13 +1328,20 @@
                     stat("Win rate", summary.win_rate.toFixed(0) + "%"),
                     stat("Realized", signedUsd(realized), realized >= 0 ? "good-text" : "bad-text"),
                 );
+                // Split the result: what the price moves made vs what the fees cost.
+                if (summary.gross_pnl != null) {
+                    box.append(
+                        stat("Before fees", signedUsd(summary.gross_pnl), summary.gross_pnl >= 0 ? "good-text" : "bad-text"),
+                        stat("Fees paid", "−" + usd(summary.fees_paid), "bad-text"),
+                    );
+                }
             }
 
             const body = $("trades");
             body.replaceChildren();
             if (!trips.length) {
                 const row = el("tr");
-                row.append(el("td", { colspan: 5, class: "small" }, "No trades yet. The bot buys when the fast average crosses above the slow one."));
+                row.append(el("td", { colspan: 6, class: "small" }, "No trades yet. The bot buys when the fast average crosses above the slow one."));
                 body.append(row);
                 return;
             }
@@ -1351,6 +1359,12 @@
                     row.append(cell("", `${t.side === "short" ? "Cover" : "Sell"} ${usd(t.exit_price)}`, tradeTime(t.exit_ts)));
                 }
                 row.append(cell("num", fmtDuration(t.duration_s)));
+                if (t.gross_pnl != null) {
+                    const grossCls = "num " + (t.gross_pnl > 0 ? "good-text" : t.gross_pnl < 0 ? "bad-text" : "");
+                    row.append(cell(grossCls, signedUsd(t.gross_pnl), `${signedPct(t.gross_pct)} · fees ${usd(t.fees)}`));
+                } else {
+                    row.append(cell("num small", "–"));
+                }
                 row.append(cell(resultCls, signedUsd(t.pnl), signedPct(t.pnl_pct) + (t.open ? (t.side === "short" ? " if covered now" : " if sold now") : "")));
                 body.append(row);
             }
