@@ -1231,6 +1231,7 @@
                 <div class="label"><i data-lucide="thermometer"></i>Temperature</div>
                 <div class="value" id="temp-cpu">–</div>
                 <div class="small" id="temp-more"></div>
+                <div class="small" id="temp-range"></div>
             </div>
             <div class="card" id="battery-card">
                 <div class="label"><i data-lucide="battery" id="battery-icon"></i>Battery<span class="card-alert" id="bat-alert" hidden></span></div>
@@ -1572,6 +1573,20 @@
                     .className = "small bad-text";
                 else $("temp-more")
                     .className = "small";
+
+                // Lowest / average / highest over the last 24 h (one reading per minute, stored by the API).
+                const r = s.temps_24h;
+                const range = $("temp-range");
+                if (r && r.cpu_c) {
+                    const span = r.hours >= 23.5 ? "24h" : `Last ${r.hours < 1 ? Math.max(1, Math.round(r.hours * 60)) + " min" : r.hours.toFixed(0) + "h"}`;
+                    range.textContent = `${span} CPU: low ${r.cpu_c.low} · avg ${r.cpu_c.avg} · high ${r.cpu_c.high} °C`;
+                    range.className = "small" + (r.cpu_c.high >= 70 ? " bad-text" : "");
+                    const line = (name, v) => v ? `${name}: low ${v.low} · avg ${v.avg} · high ${v.high} °C` : null;
+                    range.title = [`${span} (one reading per minute)`, line("CPU", r.cpu_c),
+                        line("Battery", r.battery_c), line("Board", r.board_c)].filter(Boolean).join("\n");
+                } else {
+                    range.textContent = "";
+                }
 
                 renderQr(s.ip);
                 renderWifi(s.wifi);
