@@ -1,15 +1,23 @@
 import * as echarts from "echarts/core";
-import { LineChart, ScatterChart } from "echarts/charts";
-import { DataZoomComponent, GridComponent, MarkLineComponent, TooltipComponent } from "echarts/components";
+import { BarChart, LineChart, ScatterChart } from "echarts/charts";
+import {
+    DataZoomComponent, GraphicComponent, GridComponent, MarkLineComponent, ToolboxComponent, TooltipComponent,
+} from "echarts/components";
 import { CanvasRenderer } from "echarts/renderers";
 import { Activity, CircleDot, Crosshair, createIcons } from "lucide";
 
-echarts.use([LineChart, ScatterChart, DataZoomComponent, GridComponent, MarkLineComponent, TooltipComponent, CanvasRenderer]);
+echarts.use([
+    BarChart, LineChart, ScatterChart, DataZoomComponent, GraphicComponent, GridComponent, MarkLineComponent,
+    ToolboxComponent, TooltipComponent, CanvasRenderer,
+]);
 
 const overlays = { sma: true, trades: true, levels: true };
 const DEFAULT_WINDOW_MS = 2 * 60 * 60 * 1000; // open on the last 2 hours
+// Three stacked panels sharing one time axis: price, volume, order-book pressure.
+const PANELS = { price: { top: 34, height: "50%" }, volume: { top: "66%", height: "10%" }, pressure: { top: "81%", height: "8%" } };
+const AXES = [0, 1, 2];
 let chart;
-let chartData = { points: [], trades: [], fastN: 0, slowN: 0, trips: [] };
+let chartData = { points: [], trades: [], fastN: 0, slowN: 0, trips: [], candles: [], book: [] };
 let userZoomed = false; // once the user zooms or pans, stop following the latest data
 let applyingZoom = false;
 
@@ -210,9 +218,70 @@ function buildOption() {
         series.push(tradeMarkers(visibleTrades, "BUY"), tradeMarkers(visibleTrades, "SELL"));
     }
 
+    // Volume per minute, green when the candle closed up, red when it closed down.
+    const good = themeColor("--good");
+    const bad = themeColor("--bad");
+    series.push({
+        name: "Volume",
+        type: "bar",
+        xAxisIndex: 1,
+        yAxisIndex: 1,
+        barMaxWidth: 6,
+        barMinWidth: 1,
+        data: chartData.candles.map(candle => ({
+            value: [Number(candle.ts) * 1000, candle.volume],
+            itemStyle: { color: candle.close >= candle.open ? good : bad, opacity: .75 },
+        })),
+    });
+
+    // Order-book pressure: share of resting size on the bid side minus the ask side.
+    series.push({
+        name: "Pressure",
+        type: "bar",
+        xAxisIndex: 2,
+        yAxisIndex: 2,
+        barMaxWidth: 6,
+        barMinWidth: 1,
+        data: chartData.book.map(row => ({
+            value: [Number(row.ts) * 1000, row.imbalance],
+            itemStyle: { color: row.imbalance >= 0 ? good : bad, opacity: .75 },
+        })),
+    });
+
+    // All three panels must share one time range, otherwise each axis fits its own data and
+    // the zoom window lands on different times in each panel.
+    const times = [
+        ...points.map(p => Number(p.ts) * 1000),
+        ...chartData.candles.map(c => Number(c.ts) * 1000),
+        ...chartData.book.map(b => Number(b.ts) * 1000),
+    ];
+    const xMin = times.length ? Math.min(...times) : undefined;
+    const xMax = times.length ? Math.max(...times) : undefined;
+
+    const axisText = { color: sub, fontSize: 10 };
+    const panelLabel = (text, top) => ({
+        type: "text", left: 10, top, silent: true, style: { text, fill: sub, fontSize: 10, fontWeight: "bold" },
+    });
+
     return {
         animation: false,
-        grid: { left: 8, right: 68, top: 34, bottom: 58, containLabel: true },
+        grid: Object.values(PANELS).map(panel => ({ left: 12, right: 74, ...panel })),
+        axisPointer: { link: [{ xAxisIndex: "all" }] },
+        toolbox: {
+            right: 74,
+            top: 0,
+            itemSize: 16,
+            itemGap: 12,
+            iconStyle: { borderColor: sub },
+            emphasis: { iconStyle: { borderColor: accent } },
+            feature: {
+                dataZoom: {
+                    xAxisIndex: AXES,
+                    yAxisIndex: false,
+                    title: { zoom: "Drag a box to zoom", back: "Undo last zoom" },
+                },
+            },
+        },
         tooltip: {
             trigger: "axis",
             axisPointer: { type: "cross", lineStyle: { color: sub, opacity: .65 } },
@@ -223,37 +292,72 @@ function buildOption() {
                 const items = Array.isArray(params) ? params : [params];
                 const timestamp = Number(items[0]?.axisValue);
                 const heading = Number.isFinite(timestamp) ? new Date(timestamp).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "Price";
+                const show = (name, value) => {
+                    if (name === "Volume") return value.toFixed(3) + " BTC";
+                    if (name === "Pressure") return (value >= 0 ? "+" : "−") + Math.abs(value * 100).toFixed(0) + "% " + (value >= 0 ? "buyers" : "sellers");
+                    return formatPrice(value);
+                };
                 const rows = items.filter(item => item.value && item.value[1] != null).map(item => {
-                    return `<div>${item.marker}${item.seriesName}: <b>${formatPrice(item.value[1])}</b></div>`;
+                    return `<div>${item.marker}${item.seriesName}: <b>${show(item.seriesName, item.value[1])}</b></div>`;
                 });
                 return `<strong>${heading}</strong>${rows.join("")}`;
             },
         },
-        xAxis: {
+        // One time axis per panel, kept in sync by the shared dataZoom; only the bottom one shows labels.
+        xAxis: AXES.map(index => ({
             type: "time",
+            gridIndex: index,
+            min: xMin,
+            max: xMax,
             boundaryGap: false,
             axisLine: { lineStyle: { color: border } },
             axisTick: { show: false },
-            axisLabel: { color: sub, hideOverlap: true, fontSize: 10 },
+            axisLabel: { ...axisText, hideOverlap: true, show: index === 2 },
+            axisPointer: { label: { show: index === 2 } },
             splitLine: { show: false },
-        },
-        yAxis: {
+        })),
+        yAxis: [{
             type: "value",
+            gridIndex: 0,
+            position: "right",
             scale: true,
-            axisLabel: { color: sub, fontSize: 10, formatter: value => formatPrice(value) },
+            axisLabel: { ...axisText, formatter: value => formatPrice(value) },
             axisLine: { show: false },
             axisTick: { show: false },
             splitLine: { lineStyle: { color: border, type: "dashed" } },
-        },
+        }, {
+            type: "value",
+            gridIndex: 1,
+            position: "right",
+            min: 0,
+            splitNumber: 2,
+            axisLabel: { ...axisText, formatter: value => value.toFixed(1) },
+            axisLine: { show: false },
+            axisTick: { show: false },
+            splitLine: { lineStyle: { color: border, type: "dashed" } },
+        }, {
+            type: "value",
+            gridIndex: 2,
+            position: "right",
+            min: -1,
+            max: 1,
+            interval: 1,
+            axisLabel: { ...axisText, formatter: value => value === 0 ? "0" : (value > 0 ? "buy" : "sell") },
+            axisLine: { show: false },
+            axisTick: { show: false },
+            splitLine: { lineStyle: { color: border, type: "dashed" } },
+        }],
         dataZoom: [{
             id: "zoom-inside",
             type: "inside",
+            xAxisIndex: AXES,
             zoomOnMouseWheel: "shift",
             moveOnMouseMove: true,
             zoomOnTouchPinch: true,
         }, {
             id: "zoom-slider",
             type: "slider",
+            xAxisIndex: AXES,
             height: 22,
             bottom: 8,
             borderColor: border,
@@ -264,20 +368,37 @@ function buildOption() {
             textStyle: { color: sub, fontSize: 10 },
             labelFormatter: value => new Date(value).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         }],
-        graphic: points.length < 2 ? [{
-            type: "text",
-            left: "center",
-            top: "middle",
-            style: { text: "Collecting prices…", fill: sub, fontSize: 13 },
-        }] : [],
+        graphic: [
+            panelLabel("VOLUME · BTC per minute", "61.5%"),
+            panelLabel("ORDER-BOOK PRESSURE · near the price", "77%"),
+            ...(points.length < 2 ? [{
+                type: "text",
+                left: "center",
+                top: "25%",
+                style: { text: "Collecting prices…", fill: sub, fontSize: 13 },
+            }] : []),
+        ],
         series,
     };
 }
 
 function render() {
     if (!chart) return;
-    chart.setOption(buildOption(), { replaceMerge: ["series"] });
+    chart.setOption(buildOption(), { replaceMerge: ["series", "graphic"] });
     followLatest();
+}
+
+function setRange(range) {
+    if (!chart) return;
+    if (range === "all") {
+        userZoomed = true;
+        applyingZoom = true;
+        chart.dispatchAction({ type: "dataZoom", start: 0, end: 100 });
+        applyingZoom = false;
+    } else {
+        userZoomed = false;
+        followLatest();
+    }
 }
 
 // Until the user zooms or pans, keep the view on the most recent DEFAULT_WINDOW_MS.
@@ -301,6 +422,8 @@ function init() {
     });
     createIcons({ icons: { Activity, CircleDot, Crosshair } });
     document.getElementById("chart-controls").addEventListener("click", event => {
+        const rangeButton = event.target.closest("[data-range]");
+        if (rangeButton) return setRange(rangeButton.dataset.range);
         const button = event.target.closest("[data-overlay]");
         if (!button) return;
         const key = button.dataset.overlay;
@@ -318,8 +441,13 @@ function init() {
 }
 
 function update(points, trades, fastN, slowN, trips) {
-    chartData = { points: points || [], trades: trades || [], fastN, slowN, trips: trips || [] };
+    chartData = { ...chartData, points: points || [], trades: trades || [], fastN, slowN, trips: trips || [] };
     render();
 }
 
-window.dashboardChart = { init, update };
+function updateMarket(candles, book) {
+    chartData = { ...chartData, candles: candles || [], book: book || [] };
+    render();
+}
+
+window.dashboardChart = { init, update, updateMarket };

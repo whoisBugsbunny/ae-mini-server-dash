@@ -383,9 +383,95 @@
 
         .chart {
             width: 100%;
-            height: 340px;
+            height: 520px;
             display: block;
             min-width: 0;
+        }
+
+        .chart-toggle.range {
+            font-weight: 700;
+            min-width: 40px;
+            justify-content: center;
+        }
+
+        .chart-hint {
+            color: var(--sub);
+            font-size: .72rem;
+            margin-top: 4px;
+        }
+
+        .book-kpis {
+            display: grid;
+            gap: 10px;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            margin-bottom: 12px;
+        }
+
+        .pressure-bar {
+            height: 10px;
+            border-radius: 99px;
+            background: var(--bad);
+            overflow: hidden;
+        }
+
+        .pressure-bar > div {
+            height: 100%;
+            width: 50%;
+            background: var(--good);
+            transition: width .4s;
+        }
+
+        .pressure-text {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            font-size: .8rem;
+            font-weight: 600;
+            margin: 6px 0 14px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .ladder {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .ladder-head,
+        .ladder-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 4px 8px;
+            font-size: .8rem;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .ladder-head {
+            color: var(--sub);
+            font-size: .7rem;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+        }
+
+        .ladder-row {
+            position: relative;
+            border-radius: 4px;
+        }
+
+        .ladder-row::before {
+            content: "";
+            position: absolute;
+            inset: 0 auto 0 0;
+            width: var(--w, 0%);
+            border-radius: 4px;
+            background: var(--c);
+            opacity: .14;
+        }
+
+        .ladder-row span {
+            position: relative;
         }
 
         .table-wrap {
@@ -539,7 +625,11 @@
             }
 
             .chart {
-                height: 300px;
+                height: 460px;
+            }
+
+            .book-kpis {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
             }
         }
     </style>
@@ -642,12 +732,38 @@
                     <button class="chart-toggle" type="button" data-overlay="levels" aria-pressed="true" title="Toggle estimated support and resistance">
                         <i data-lucide="crosshair" aria-hidden="true"></i><span>S/R</span>
                     </button>
+                    <button class="chart-toggle range" type="button" data-range="latest" title="Show the last 2 hours and follow new prices">2h</button>
+                    <button class="chart-toggle range" type="button" data-range="all" title="Show everything loaded">All</button>
                 </div>
             </div>
             <div class="chart-levels" id="chart-levels" aria-live="polite"></div>
             <div class="chart-wrap">
-                <div class="chart" id="chart" role="img" aria-label="Interactive price line chart"></div>
+                <div class="chart" id="chart" role="img" aria-label="Interactive price, volume and order-book pressure chart"></div>
             </div>
+            <div class="chart-hint">Zoom: tap the magnifier at the top right of the chart and drag a box. Drag the chart to pan, pinch or Shift+scroll to zoom, or use the slider.</div>
+
+            <h2>Order book · live</h2>
+            <div class="book-kpis">
+                <div class="kpi"><div class="label">Best bid (buyers)</div><div class="value good-text" id="book-bid">–</div></div>
+                <div class="kpi"><div class="label">Best ask (sellers)</div><div class="value bad-text" id="book-ask">–</div></div>
+                <div class="kpi"><div class="label">Spread</div><div class="value" id="book-spread">–</div></div>
+                <div class="kpi"><div class="label">Volume, last 60 min</div><div class="value" id="vol-hour">–</div></div>
+            </div>
+            <div class="pressure">
+                <div class="pressure-bar" aria-hidden="true"><div id="pressure-bid"></div></div>
+                <div class="pressure-text"><span class="good-text" id="pressure-buy">–</span><span id="pressure-range" class="small"></span><span class="bad-text" id="pressure-sell">–</span></div>
+            </div>
+            <div class="ladder">
+                <div>
+                    <div class="ladder-head"><span>Bid price</span><span>Size</span></div>
+                    <div id="ladder-bids"></div>
+                </div>
+                <div>
+                    <div class="ladder-head"><span>Ask price</span><span>Size</span></div>
+                    <div id="ladder-asks"></div>
+                </div>
+            </div>
+            <div class="small" id="book-source"></div>
 
             <h2>Trades: each buy with its sell</h2>
             <div class="trip-summary" id="trip-summary"></div>
@@ -670,7 +786,7 @@
         <footer>Self-hosted on an old phone · refreshes automatically</footer>
     </div>
 
-    <script src="assets/dashboard.bundle.js"></script>
+    <script src="assets/dashboard.bundle.js?v=b98317cda2"></script>
     <script>
         const $ = (id) => document.getElementById(id);
         const BOT = "paper-sma";
@@ -861,6 +977,52 @@
             renderTrips(b.round_trips || [], b.summary, s.base);
         }
 
+        // ---------- market data: volume + order book ----------
+        const PRODUCT = "BTC-USD";
+
+        async function refreshMarket() {
+            try {
+                const m = await api(`/api/market/${PRODUCT}?points=600`);
+                renderBook(m.state, m.candles);
+                window.dashboardChart?.updateMarket(m.candles, m.book);
+            } catch (e) {
+                $("book-source").textContent = "Market data not available yet. The collector writes its first snapshot within a minute of starting.";
+            }
+        }
+
+        function ladderRows(levels, maxSize, color) {
+            return levels.map(([price, size]) => {
+                const row = el("div", { class: "ladder-row", style: `--w:${(size / maxSize * 100).toFixed(1)}%; --c:${color}` });
+                row.append(el("span", {}, usd(price)), el("span", {}, size.toFixed(4)));
+                return row;
+            });
+        }
+
+        function renderBook(s, candles) {
+            if (s.bid == null) return;
+            $("book-bid").textContent = usd(s.bid);
+            $("book-ask").textContent = usd(s.ask);
+            $("book-spread").textContent = s.spread < 0.1 ? "< $0.10" : usd(s.spread);
+
+            const hourAgo = Date.now() / 1000 - 3600;
+            const volume = candles.filter(c => c.ts >= hourAgo).reduce((sum, c) => sum + c.volume, 0);
+            $("vol-hour").textContent = volume.toFixed(2) + " BTC";
+
+            const buyShare = s.bid_depth / (s.bid_depth + s.ask_depth) * 100;
+            $("pressure-bid").style.width = buyShare.toFixed(1) + "%";
+            $("pressure-buy").textContent = `Buyers ${buyShare.toFixed(0)}% · ${s.bid_depth.toFixed(2)} BTC`;
+            $("pressure-sell").textContent = `${s.ask_depth.toFixed(2)} BTC · ${(100 - buyShare).toFixed(0)}% Sellers`;
+            $("pressure-range").textContent = `resting orders ${usd(s.range_low, 0)}–${usd(s.range_high, 0)}`;
+
+            const maxSize = Math.max(...s.bids.map(l => l[1]), ...s.asks.map(l => l[1]), 1e-9);
+            $("ladder-bids").replaceChildren(...ladderRows(s.bids, maxSize, "var(--good)"));
+            $("ladder-asks").replaceChildren(...ladderRows(s.asks, maxSize, "var(--bad)"));
+
+            const errors = Object.entries(s.errors || {}).map(([k, v]) => `${k}: ${v}`).join(" · ");
+            $("book-source").textContent = `Order book: ${s.book_source} · Volume: ${s.candle_source}` +
+                (s.book_at ? ` · updated ${ago(s.book_at)}` : "") + (errors ? ` · error ${errors}` : "");
+        }
+
         const signedUsd = (v) => (v >= 0 ? "+" : "−") + usd(Math.abs(v));
         const signedPct = (v) => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(2) + "%";
         const tradeTime = (ts) => new Date(ts * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -926,6 +1088,8 @@
         window.dashboardChart?.init();
         refreshStats();
         refreshBot();
+        refreshMarket();
+        setInterval(refreshMarket, 30000);
         setInterval(refreshStats, 5000);
         setInterval(refreshBot, 15000);
         setInterval(renderStatus, 1000);
