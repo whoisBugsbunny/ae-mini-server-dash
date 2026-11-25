@@ -1516,6 +1516,9 @@
             <div class="chart-toolbar">
                 <div class="chart-title">Price action</div>
                 <div class="chart-controls" id="chart-controls" role="group" aria-label="Chart overlays">
+                    <button class="chart-toggle" type="button" id="chart-mode" data-mode="candles" aria-pressed="false" title="Switch the price between a line and 1-minute candlesticks">
+                        <i data-lucide="chart-candlestick" aria-hidden="true"></i><span>Candles</span>
+                    </button>
                     <button class="chart-toggle" type="button" data-overlay="sma" aria-pressed="true" title="Toggle moving averages">
                         <i data-lucide="activity" aria-hidden="true"></i><span>SMA</span>
                     </button>
@@ -1625,7 +1628,7 @@
         </div>
     </dialog>
 
-    <script src="assets/dashboard.bundle.js?v=bd2ec6a1c8"></script>
+    <script src="assets/dashboard.bundle.js?v=62cf9578e6"></script>
     <script>
         const $ = (id) => document.getElementById(id);
         let lastStatsOk = 0;

@@ -1,5 +1,5 @@
 import * as echarts from "echarts/core";
-import { BarChart, LineChart, ScatterChart } from "echarts/charts";
+import { BarChart, CandlestickChart, LineChart, ScatterChart } from "echarts/charts";
 import {
     DataZoomComponent, GraphicComponent, GridComponent, MarkLineComponent, ToolboxComponent, TooltipComponent,
 } from "echarts/components";
@@ -8,11 +8,14 @@ import "./icons.js";
 import "./qr.js";
 
 echarts.use([
-    BarChart, LineChart, ScatterChart, DataZoomComponent, GraphicComponent, GridComponent, MarkLineComponent,
+    BarChart, CandlestickChart, LineChart, ScatterChart, DataZoomComponent, GraphicComponent, GridComponent, MarkLineComponent,
     ToolboxComponent, TooltipComponent, CanvasRenderer,
 ]);
 
 const overlays = { sma: true, trades: true, levels: true };
+// Price panel style: "line" (the bot's own prices) or "candles" (1-minute OHLC candles from the market collector).
+// Remembered per browser; storage can be blocked, so guard it.
+let priceMode = (() => { try { return localStorage.getItem("ae-chart-mode") === "candles" ? "candles" : "line"; } catch (e) { return "line"; } })();
 const DEFAULT_WINDOW_MS = 2 * 60 * 60 * 1000; // open on the last 2 hours
 // Three stacked panels sharing one time axis: price, volume, order-book pressure.
 const PANELS = { price: { top: 34, height: "50%" }, volume: { top: "66%", height: "10%" }, pressure: { top: "81%", height: "8%" } };
@@ -165,7 +168,17 @@ function buildOption() {
     const start = points.length ? Number(points[0].ts) * 1000 : 0;
     const end = points.length ? Number(points[points.length - 1].ts) * 1000 : 0;
     const gapMs = gapThresholdMs(points);
-    const series = [{
+    const good = themeColor("--good");
+    const bad = themeColor("--bad");
+    const useCandles = priceMode === "candles" && chartData.candles.length > 0;
+    const priceSeries = useCandles ? {
+        name: "Candles",
+        type: "candlestick",
+        barMaxWidth: 8,
+        // ECharts candle order on a time axis: [time, open, close, low, high]
+        data: chartData.candles.map(c => [Number(c.ts) * 1000, c.open, c.close, c.low, c.high]),
+        itemStyle: { color: good, color0: bad, borderColor: good, borderColor0: bad },
+    } : {
         name: "Price",
         type: "line",
         data: seriesWithGaps(points, "price", gapMs),
@@ -173,6 +186,9 @@ function buildOption() {
         connectNulls: false,
         lineStyle: { color: accent, width: 2 },
         areaStyle: { color: "rgba(198, 239, 99, .055)" },
+    };
+    const series = [{
+        ...priceSeries,
         markLine: {
             silent: true,
             symbol: "none",
@@ -225,8 +241,6 @@ function buildOption() {
     }
 
     // Volume per minute, green when the candle closed up, red when it closed down.
-    const good = themeColor("--good");
-    const bad = themeColor("--bad");
     series.push({
         name: "Volume",
         type: "bar",
@@ -304,6 +318,11 @@ function buildOption() {
                     return formatPrice(value);
                 };
                 const rows = items.filter(item => item.value && item.value[1] != null).map(item => {
+                    if (item.seriesType === "candlestick") {
+                        const [, open, close, low, high] = item.data;
+                        const color = close >= open ? good : bad;
+                        return `<div>${item.marker}O ${formatPrice(open)} · H ${formatPrice(high)} · L ${formatPrice(low)} · <b style="color:${color}">C ${formatPrice(close)}</b></div>`;
+                    }
                     return `<div>${item.marker}${item.seriesName}: <b>${show(item.seriesName, item.value[1])}</b></div>`;
                 });
                 return `<strong>${heading}</strong>${rows.join("")}`;
@@ -423,12 +442,20 @@ function init() {
     if (!element || chart) return;
 
     chart = echarts.init(element, null, { renderer: "canvas" });
+    document.querySelector("[data-mode]")?.setAttribute("aria-pressed", String(priceMode === "candles"));
     chart.on("datazoom", () => {
         if (!applyingZoom) userZoomed = true;
     });
     document.getElementById("chart-controls").addEventListener("click", event => {
         const rangeButton = event.target.closest("[data-range]");
         if (rangeButton) return setRange(rangeButton.dataset.range);
+        const modeButton = event.target.closest("[data-mode]");
+        if (modeButton) {
+            priceMode = priceMode === "candles" ? "line" : "candles";
+            try { localStorage.setItem("ae-chart-mode", priceMode); } catch (e) { /* not essential */ }
+            modeButton.setAttribute("aria-pressed", String(priceMode === "candles"));
+            return render();
+        }
         const button = event.target.closest("[data-overlay]");
         if (!button) return;
         const key = button.dataset.overlay;
