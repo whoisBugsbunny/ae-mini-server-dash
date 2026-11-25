@@ -1390,7 +1390,7 @@
         </div>
     </dialog>
 
-    <script src="assets/dashboard.bundle.js?v=d19a2e80fa"></script>
+    <script src="assets/dashboard.bundle.js?v=121f5ba6aa"></script>
     <script>
         const $ = (id) => document.getElementById(id);
         let lastStatsOk = 0;
@@ -1404,13 +1404,15 @@
             "ae-bot-paper-sma": ["SMA bot", "chart-line"],
             "ae-bot-flow": ["Flow bot", "waves"],
             "ae-bot-inverse": ["Inverse SMA bot", "arrow-down-up"],
+            "ae-bot-scalp": ["Scalp bot", "zap"],
             "ae-market": ["Market data", "chart-candlestick"],
             "ssh-agent": ["SSH agent", "key-round"],
         };
         const BOT_ICONS = {
             "paper-sma": "chart-line",
             "paper-flow": "waves",
-            "paper-sma-inverse": "arrow-down-up"
+            "paper-sma-inverse": "arrow-down-up",
+            "paper-scalp": "zap"
         };
         const isShort = (s) => s.direction === "short";
         const icon = (name, cls) => window.dashboardIcon ? window.dashboardIcon(name, cls) : document.createTextNode("");
