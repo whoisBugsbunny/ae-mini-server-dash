@@ -1,0 +1,13 @@
+{
+    "name": "ae-mini-server-dash",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "node build.mjs"
+    },
+    "devDependencies": {
+        "echarts": "6.1.0",
+        "esbuild": "^0.25.0",
+        "lucide": "1.79.0"
+    }
+}

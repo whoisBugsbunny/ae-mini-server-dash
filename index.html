@@ -5,7 +5,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ae-mini-server</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📱</text></svg>">
+    <link rel="icon" type="image/png" href="assets/redmi-6-pro.png">
     <style>
         :root {
             color-scheme: dark;
@@ -64,14 +64,19 @@
         }
 
         .brand .icon {
-            display: grid;
-            place-items: center;
-            width: 48px;
-            height: 48px;
-            border: 1px solid #46513a;
-            border-radius: 12px;
-            background: #20271a;
-            font-size: 25px;
+            display: block;
+            width: 56px;
+            height: 56px;
+            flex: 0 0 56px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+
+        .brand .icon img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
         }
 
         h1 {
@@ -295,42 +300,92 @@
         }
 
         .chart-wrap {
-            position: relative;
-            border-top: 1px solid var(--border);
+            min-width: 0;
+        }
+
+        .chart-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px 16px;
             margin-top: 18px;
+            padding-top: 14px;
+            border-top: 1px solid var(--border);
+        }
+
+        .chart-title {
+            font-size: .9rem;
+            font-weight: 600;
+        }
+
+        .chart-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .chart-levels {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            min-height: 26px;
             padding-top: 8px;
-        }
-
-        svg.chart {
-            width: 100%;
-            height: 240px;
-            display: block;
-        }
-
-        svg.chart text {
-            fill: var(--sub);
-            font-size: 11px;
+            color: var(--sub);
+            font-size: .72rem;
             font-variant-numeric: tabular-nums;
         }
 
-        .legend {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 14px;
-            font-size: .76rem;
-            color: var(--sub);
-            margin-top: 6px;
+        .chart-level {
+            padding-left: 7px;
+            border-left: 2px solid currentColor;
         }
 
-        .legend span::before {
-            content: "";
-            display: inline-block;
-            width: 14px;
-            height: 3px;
-            border-radius: 2px;
-            margin-right: 6px;
-            vertical-align: middle;
-            background: var(--c);
+        .chart-level.support {
+            color: var(--good);
+        }
+
+        .chart-level.resistance {
+            color: var(--warn);
+        }
+
+        .chart-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            min-height: 32px;
+            padding: 5px 8px;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            background: var(--inset);
+            color: var(--sub);
+            font: inherit;
+            font-size: .74rem;
+            cursor: pointer;
+        }
+
+        .chart-toggle[aria-pressed="true"] {
+            border-color: #56623e;
+            color: var(--text);
+            background: #20251b;
+        }
+
+        .chart-toggle:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        .chart-toggle svg {
+            width: 15px;
+            height: 15px;
+            stroke-width: 1.8;
+        }
+
+        .chart {
+            width: 100%;
+            height: 270px;
+            display: block;
+            min-width: 0;
         }
 
         .table-wrap {
@@ -388,8 +443,9 @@
             }
 
             .brand .icon {
-                width: 42px;
-                height: 42px;
+                width: 46px;
+                height: 46px;
+                flex-basis: 46px;
             }
 
             h1 {
@@ -421,8 +477,22 @@
                 font-size: 1.9rem;
             }
 
-            svg.chart {
-                height: 200px;
+            .chart-toolbar {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .chart-controls {
+                width: 100%;
+            }
+
+            .chart-toggle {
+                flex: 1;
+                justify-content: center;
+            }
+
+            .chart {
+                height: 230px;
             }
         }
     </style>
@@ -432,7 +502,7 @@
     <div class="wrap">
         <header>
             <div class="brand">
-                <div class="icon">📱</div>
+                <div class="icon"><img src="assets/redmi-6-pro.png" alt="" width="56" height="56"></div>
                 <div>
                     <h1>ae-mini-server</h1>
                     <div class="device" id="device">Connecting…</div>
@@ -495,26 +565,54 @@
             <div id="bot-notice"></div>
 
             <div class="kpis">
-                <div class="kpi"><div class="label">Equity</div><div class="value" id="bot-equity">–</div></div>
-                <div class="kpi"><div class="label">Profit / loss</div><div class="value" id="bot-pnl">–</div></div>
-                <div class="kpi"><div class="label">Holding</div><div class="value" id="bot-position">–</div></div>
-                <div class="kpi"><div class="label">Trades</div><div class="value" id="bot-trades">–</div></div>
+                <div class="kpi">
+                    <div class="label">Equity</div>
+                    <div class="value" id="bot-equity">–</div>
+                </div>
+                <div class="kpi">
+                    <div class="label">Profit / loss</div>
+                    <div class="value" id="bot-pnl">–</div>
+                </div>
+                <div class="kpi">
+                    <div class="label">Holding</div>
+                    <div class="value" id="bot-position">–</div>
+                </div>
+                <div class="kpi">
+                    <div class="label">Trades</div>
+                    <div class="value" id="bot-trades">–</div>
+                </div>
             </div>
 
-            <div class="chart-wrap"><svg class="chart" id="chart" role="img" aria-label="Price chart"></svg></div>
-            <div class="legend">
-                <span style="--c: var(--accent)">Price</span>
-                <span style="--c: var(--fast)" id="leg-fast">Fast SMA</span>
-                <span style="--c: var(--slow)" id="leg-slow">Slow SMA</span>
-                <span style="--c: var(--good)">Buy</span>
-                <span style="--c: var(--bad)">Sell</span>
+            <div class="chart-toolbar">
+                <div class="chart-title">Price action</div>
+                <div class="chart-controls" id="chart-controls" role="group" aria-label="Chart overlays">
+                    <button class="chart-toggle" type="button" data-overlay="sma" aria-pressed="true" title="Toggle moving averages">
+                        <i data-lucide="activity" aria-hidden="true"></i><span>SMA</span>
+                    </button>
+                    <button class="chart-toggle" type="button" data-overlay="trades" aria-pressed="true" title="Toggle buy and sell markers">
+                        <i data-lucide="circle-dot" aria-hidden="true"></i><span>Trades</span>
+                    </button>
+                    <button class="chart-toggle" type="button" data-overlay="levels" aria-pressed="true" title="Toggle estimated support and resistance">
+                        <i data-lucide="crosshair" aria-hidden="true"></i><span>S/R</span>
+                    </button>
+                </div>
+            </div>
+            <div class="chart-levels" id="chart-levels" aria-live="polite"></div>
+            <div class="chart-wrap">
+                <div class="chart" id="chart" role="img" aria-label="Interactive price line chart"></div>
             </div>
 
             <h2>Recent trades</h2>
             <div class="table-wrap">
                 <table>
                     <thead>
-                        <tr><th>Time</th><th>Side</th><th class="num">Price</th><th class="num">Amount</th><th>Why</th></tr>
+                        <tr>
+                            <th>Time</th>
+                            <th>Side</th>
+                            <th class="num">Price</th>
+                            <th class="num">Amount</th>
+                            <th>Why</th>
+                        </tr>
                     </thead>
                     <tbody id="trades"></tbody>
                 </table>
@@ -530,6 +628,7 @@
         let lastStatsOk = 0;
 
         const SERVICE_NAMES = {
+    <script src="assets/dashboard.bundle.js"></script>
             "sshd": "SSH",
             "nginx": "Web server",
             "ae-api": "Dashboard API",
@@ -710,7 +809,7 @@
             $("bot-position").textContent = s.qty > 0 ? `${s.qty.toFixed(6)} ${s.base}` : "Cash";
             $("bot-trades").textContent = s.trades;
 
-            drawChart(b.prices, b.trades);
+            drawChart(b.prices, b.trades, s.fast_n, s.slow_n);
             renderTrades(b.trades, s.base);
         }
 
@@ -734,63 +833,8 @@
             }
         }
 
-        function drawChart(points, trades) {
-            const svg = $("chart");
-            const W = svg.clientWidth || 600, H = svg.clientHeight || 240;
-            svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
-            svg.replaceChildren();
-            const NS = "http://www.w3.org/2000/svg";
-            const add = (tag, attrs, text) => {
-                const n = document.createElementNS(NS, tag);
-                for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
-                if (text != null) n.textContent = text;
-                svg.append(n);
-                return n;
-            };
-
-            if (points.length < 2) {
-                add("text", { x: W / 2, y: H / 2, "text-anchor": "middle" }, "Collecting prices…");
-                return;
-            }
-
-            const pad = { l: 6, r: 74, t: 10, b: 24 };
-            const t0 = points[0].ts, t1 = points[points.length - 1].ts;
-            const vals = points.flatMap(p => [p.price, p.fast, p.slow]).filter(v => v != null);
-            let lo = Math.min(...vals), hi = Math.max(...vals);
-            const span = (hi - lo) || hi * 0.001 || 1;
-            lo -= span * 0.08; hi += span * 0.08;
-            const x = ts => pad.l + (ts - t0) / ((t1 - t0) || 1) * (W - pad.l - pad.r);
-            const y = v => pad.t + (hi - v) / (hi - lo) * (H - pad.t - pad.b);
-
-            for (let i = 0; i <= 3; i++) {
-                const v = lo + (hi - lo) * i / 3, yy = y(v);
-                add("line", { x1: pad.l, x2: W - pad.r, y1: yy, y2: yy, stroke: "var(--border)", "stroke-width": 1 });
-                add("text", { x: W - pad.r + 8, y: yy + 4 }, usd(v, v >= 1000 ? 0 : 2));
-            }
-            add("text", { x: pad.l, y: H - 6 }, timeOf(t0));
-            add("text", { x: W - pad.r, y: H - 6, "text-anchor": "end" }, timeOf(t1));
-
-            const path = (key) => {
-                let d = "", pen = false;
-                for (const p of points) {
-                    if (p[key] == null) { pen = false; continue; }
-                    d += `${pen ? "L" : "M"}${x(p.ts).toFixed(1)},${y(p[key]).toFixed(1)}`;
-                    pen = true;
-                }
-                return d;
-            };
-            add("path", { d: path("slow"), fill: "none", stroke: "var(--slow)", "stroke-width": 1.5 });
-            add("path", { d: path("fast"), fill: "none", stroke: "var(--fast)", "stroke-width": 1.5 });
-            add("path", { d: path("price"), fill: "none", stroke: "var(--accent)", "stroke-width": 2, "stroke-linejoin": "round" });
-
-            for (const t of trades) {
-                if (t.ts < t0 || t.ts > t1 + 60) continue;
-                add("circle", {
-                    cx: x(Math.min(t.ts, t1)), cy: y(t.price), r: 5,
-                    fill: t.side === "BUY" ? "var(--good)" : "var(--bad)",
-                    stroke: "var(--card)", "stroke-width": 2,
-                });
-            }
+        function drawChart(points, trades, fastN, slowN) {
+            window.dashboardChart.update(points, trades, fastN, slowN);
         }
 
         refreshStats();
@@ -803,3 +847,4 @@
 </body>
 
 </html>
+        window.dashboardChart.init();
