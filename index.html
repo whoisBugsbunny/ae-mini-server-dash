@@ -644,7 +644,7 @@
             overflow: hidden;
         }
 
-        .pressure-bar > div {
+        .pressure-bar>div {
             height: 100%;
             width: 50%;
             background: var(--good);
@@ -903,6 +903,7 @@
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
         }
+
         /* Phone details dialog (opened from the header photo) */
         .phone-dialog {
             /* 100dvh = the part of the screen you can actually see on phones (100vh hides under the browser bars) */
@@ -918,7 +919,8 @@
             background: var(--card);
             color: var(--text);
             box-shadow: 0 30px 80px rgba(0, 0, 0, .55);
-            overflow: hidden;  /* only the inner column scrolls, so the scroll bar stays inside the rounded corners */
+            overflow: hidden;
+            /* only the inner column scrolls, so the scroll bar stays inside the rounded corners */
         }
 
         .pd-scroll {
@@ -928,9 +930,20 @@
             scrollbar-color: var(--track) transparent;
         }
 
-        .pd-scroll::-webkit-scrollbar { width: 8px; }
-        .pd-scroll::-webkit-scrollbar-track { background: transparent; margin: 10px 0; }
-        .pd-scroll::-webkit-scrollbar-thumb { background: var(--track); border-radius: 8px; border: 2px solid var(--card); }
+        .pd-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .pd-scroll::-webkit-scrollbar-track {
+            background: transparent;
+            margin: 10px 0;
+        }
+
+        .pd-scroll::-webkit-scrollbar-thumb {
+            background: var(--track);
+            border-radius: 8px;
+            border: 2px solid var(--card);
+        }
 
         .phone-dialog::backdrop {
             background: rgba(8, 9, 8, .55);
@@ -943,7 +956,10 @@
         }
 
         @keyframes pd-in {
-            from { opacity: 0; transform: translateY(10px) scale(.98); }
+            from {
+                opacity: 0;
+                transform: translateY(10px) scale(.98);
+            }
         }
 
         .pd-close {
@@ -962,15 +978,22 @@
             cursor: pointer;
         }
 
-        .pd-close:hover { border-color: var(--accent); }
-        .pd-close svg { width: 18px; height: 18px; }
+        .pd-close:hover {
+            border-color: var(--accent);
+        }
+
+        .pd-close svg {
+            width: 18px;
+            height: 18px;
+        }
 
         .pd-body {
             display: grid;
             grid-template-columns: minmax(260px, 380px) 1fr;
             grid-template-rows: minmax(0, 1fr);
             height: min(var(--pd-h), 900px);
-            overflow: hidden;  /* desktop: each column handles its own scrolling */
+            overflow: hidden;
+            /* desktop: each column handles its own scrolling */
         }
 
         .pd-photo {
@@ -1025,7 +1048,8 @@
         }
 
         .pd-specs {
-            padding: 60px 26px 26px;  /* top room for the close button */
+            padding: 60px 26px 26px;
+            /* top room for the close button */
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
             gap: 14px;
@@ -1051,7 +1075,11 @@
             color: var(--sub);
         }
 
-        .pd-sec h4 svg { width: 15px; height: 15px; color: var(--accent); }
+        .pd-sec h4 svg {
+            width: 15px;
+            height: 15px;
+            color: var(--accent);
+        }
 
         .pd-row {
             display: grid;
@@ -1062,9 +1090,18 @@
             font-size: .85rem;
         }
 
-        .pd-row:first-of-type { border-top: 0; }
-        .pd-row span:first-child { color: var(--sub); }
-        .pd-row span:last-child { overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+        .pd-row:first-of-type {
+            border-top: 0;
+        }
+
+        .pd-row span:first-child {
+            color: var(--sub);
+        }
+
+        .pd-row span:last-child {
+            overflow-wrap: anywhere;
+            font-variant-numeric: tabular-nums;
+        }
 
         .pd-cores {
             display: grid;
@@ -1099,14 +1136,36 @@
             text-align: center;
         }
 
-        body.pd-lock { overflow: hidden; }
+        body.pd-lock {
+            overflow: hidden;
+        }
 
         @media (max-width: 720px) {
+
             /* phones: one column, the whole body scrolls (photo first) */
-            .pd-body { display: block; height: auto; max-height: var(--pd-h); overflow-y: auto; }
-            .pd-photo { overflow: visible; border-right: 0; border-bottom: 1px solid var(--border); padding: 22px 16px; }
-            .pd-photo img { max-width: 200px; }
-            .pd-specs { overflow: visible; padding: 16px; grid-template-columns: 1fr; }
+            .pd-body {
+                display: block;
+                height: auto;
+                max-height: var(--pd-h);
+                overflow-y: auto;
+            }
+
+            .pd-photo {
+                overflow: visible;
+                border-right: 0;
+                border-bottom: 1px solid var(--border);
+                padding: 22px 16px;
+            }
+
+            .pd-photo img {
+                max-width: 200px;
+            }
+
+            .pd-specs {
+                overflow: visible;
+                padding: 16px;
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -1137,19 +1196,25 @@
             <div class="card" title="Load = how many tasks were running or waiting to run, averaged over 1, 5 and 15 minutes. With 8 cores, 8.0 would mean every core busy. On Android it also counts tasks waiting on storage, so it can sit around 4 even when the cores are idle. Tap the phone photo to see real core speeds.">
                 <div class="label"><i data-lucide="cpu"></i>CPU load (1 min)</div>
                 <div class="value" id="load1">–</div>
-                <div class="bar" id="load-bar"><div></div></div>
+                <div class="bar" id="load-bar">
+                    <div></div>
+                </div>
                 <div class="small" id="load-more"></div>
             </div>
             <div class="card">
                 <div class="label"><i data-lucide="memory-stick"></i>Memory</div>
                 <div class="value" id="mem">–</div>
-                <div class="bar" id="mem-bar"><div></div></div>
+                <div class="bar" id="mem-bar">
+                    <div></div>
+                </div>
                 <div class="small" id="swap"></div>
             </div>
             <div class="card">
                 <div class="label"><i data-lucide="hard-drive"></i>Storage</div>
                 <div class="value" id="disk">–</div>
-                <div class="bar" id="disk-bar"><div></div></div>
+                <div class="bar" id="disk-bar">
+                    <div></div>
+                </div>
                 <div class="small" id="disk-free"></div>
             </div>
             <div class="card">
@@ -1160,17 +1225,19 @@
             <div class="card" id="battery-card">
                 <div class="label"><i data-lucide="battery" id="battery-icon"></i>Battery<span class="card-alert" id="bat-alert" hidden></span></div>
                 <div class="value" id="bat-pct">–</div>
-                <div class="bar" id="bat-bar"><div></div></div>
+                <div class="bar" id="bat-bar">
+                    <div></div>
+                </div>
                 <div class="small" id="bat-state"></div>
                 <div class="small" id="bat-health"></div>
             </div>
             <div class="card qr-card">
                 <div class="qr" id="qr" role="img" aria-label="QR code for the dashboard address"></div>
                 <div class="qr-info">
-                    <div class="label"><i data-lucide="wifi"></i>Network · scan to open<span class="card-alert" id="wifi-alert" hidden></span></div>
-                    <div class="value" id="qr-url">–</div>
+                    <div class="label"><span class="card-alert" id="wifi-alert" hidden></span></div>
                     <div class="small" id="wifi-line">Wi-Fi: –</div>
                     <div class="small" id="wifi-ap"></div>
+                    <div class="value" id="qr-url">–</div>
                     <code id="qr-ssh"></code>
                 </div>
             </div>
@@ -1238,13 +1305,27 @@
 
             <h2><i data-lucide="book-open"></i>Order book · live</h2>
             <div class="book-kpis">
-                <div class="kpi"><div class="label"><i data-lucide="trending-up"></i>Best bid (buyers)</div><div class="value good-text" id="book-bid">–</div></div>
-                <div class="kpi"><div class="label"><i data-lucide="trending-down"></i>Best ask (sellers)</div><div class="value bad-text" id="book-ask">–</div></div>
-                <div class="kpi"><div class="label"><i data-lucide="arrow-down-up"></i>Spread</div><div class="value" id="book-spread">–</div></div>
-                <div class="kpi"><div class="label"><i data-lucide="chart-column"></i>Volume, last 60 min</div><div class="value" id="vol-hour">–</div></div>
+                <div class="kpi">
+                    <div class="label"><i data-lucide="trending-up"></i>Best bid (buyers)</div>
+                    <div class="value good-text" id="book-bid">–</div>
+                </div>
+                <div class="kpi">
+                    <div class="label"><i data-lucide="trending-down"></i>Best ask (sellers)</div>
+                    <div class="value bad-text" id="book-ask">–</div>
+                </div>
+                <div class="kpi">
+                    <div class="label"><i data-lucide="arrow-down-up"></i>Spread</div>
+                    <div class="value" id="book-spread">–</div>
+                </div>
+                <div class="kpi">
+                    <div class="label"><i data-lucide="chart-column"></i>Volume, last 60 min</div>
+                    <div class="value" id="vol-hour">–</div>
+                </div>
             </div>
             <div class="pressure">
-                <div class="pressure-bar" aria-hidden="true"><div id="pressure-bid"></div></div>
+                <div class="pressure-bar" aria-hidden="true">
+                    <div id="pressure-bid"></div>
+                </div>
                 <div class="pressure-text"><span class="good-text" id="pressure-buy">–</span><span id="pressure-range" class="small"></span><span class="bad-text" id="pressure-sell">–</span></div>
             </div>
             <div class="ladder">
@@ -1293,7 +1374,9 @@
                 </div>
                 <div class="pd-chips" id="pd-chips"></div>
             </div>
-            <div class="pd-specs pd-scroll" id="pd-specs"><div class="small">Loading…</div></div>
+            <div class="pd-specs pd-scroll" id="pd-specs">
+                <div class="small">Loading…</div>
+            </div>
         </div>
     </dialog>
 
@@ -1314,17 +1397,33 @@
             "ae-market": ["Market data", "chart-candlestick"],
             "ssh-agent": ["SSH agent", "key-round"],
         };
-        const BOT_ICONS = { "paper-sma": "chart-line", "paper-flow": "waves", "paper-sma-inverse": "arrow-down-up" };
+        const BOT_ICONS = {
+            "paper-sma": "chart-line",
+            "paper-flow": "waves",
+            "paper-sma-inverse": "arrow-down-up"
+        };
         const isShort = (s) => s.direction === "short";
         const icon = (name, cls) => window.dashboardIcon ? window.dashboardIcon(name, cls) : document.createTextNode("");
 
         // Which bot the Bots section shows; remembered per browser (storage can be blocked, so guard it).
         // A link like ?bot=paper-flow opens that bot directly.
-        let selectedBot = new URLSearchParams(location.search).get("bot") ||
-            (() => { try { return localStorage.getItem("ae-bot"); } catch (e) { return null; } })();
+        let selectedBot = new URLSearchParams(location.search)
+            .get("bot") ||
+            (() => {
+                try {
+                    return localStorage.getItem("ae-bot");
+                } catch (e) {
+                    return null;
+                }
+            })();
+
         function selectBot(name) {
             selectedBot = name;
-            try { localStorage.setItem("ae-bot", name); } catch (e) { /* not essential */ }
+            try {
+                localStorage.setItem("ae-bot", name);
+            } catch (e) {
+                /* not essential */
+            }
             refreshBot();
         }
 
@@ -1336,7 +1435,9 @@
 
         function fmtDuration(s) {
             if (s == null) return "–";
-            const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60);
+            const d = Math.floor(s / 86400),
+                h = Math.floor(s % 86400 / 3600),
+                m = Math.floor(s % 3600 / 60);
             if (d) return `${d}d ${h}h`;
             if (h) return `${h}h ${m}m`;
             if (m) return `${m}m`;
@@ -1344,9 +1445,17 @@
         }
 
         const usd = (v, digits = 2) => v == null ? "–" :
-            "$" + Number(v).toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits });
+            "$" + Number(v)
+            .toLocaleString(undefined, {
+                minimumFractionDigits: digits,
+                maximumFractionDigits: digits
+            });
 
-        const timeOf = (ts) => new Date(ts * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        const timeOf = (ts) => new Date(ts * 1000)
+            .toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit"
+            });
 
         function ago(ts) {
             const s = Math.max(0, Date.now() / 1000 - ts);
@@ -1363,7 +1472,10 @@
             const ctrl = new AbortController();
             const timer = setTimeout(() => ctrl.abort(), 8000);
             try {
-                const res = await fetch(path, { signal: ctrl.signal, cache: "no-store" });
+                const res = await fetch(path, {
+                    signal: ctrl.signal,
+                    cache: "no-store"
+                });
                 if (!res.ok) throw new Error("HTTP " + res.status);
                 return await res.json();
             } finally {
@@ -1385,34 +1497,49 @@
                 lastStatsOk = Date.now();
                 lastStats = s;
                 const d = s.device || {};
-                $("device").textContent = [d.model, d.android && "Android " + d.android, d.miui && "MIUI " + d.miui]
-                    .filter(Boolean).join(" · ");
+                $("device")
+                    .textContent = [d.model, d.android && "Android " + d.android, d.miui && "MIUI " + d.miui]
+                    .filter(Boolean)
+                    .join(" · ");
 
-                $("uptime").textContent = fmtDuration(s.uptime_s);
-                $("procs").textContent = s.procs ? `${s.procs} processes` : "";
-                $("phone-time").textContent = new Date(s.time * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+                $("uptime")
+                    .textContent = fmtDuration(s.uptime_s);
+                $("procs")
+                    .textContent = s.procs ? `${s.procs} processes` : "";
+                $("phone-time")
+                    .textContent = new Date(s.time * 1000)
+                    .toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit"
+                    });
 
                 if (s.load) {
                     const cores = s.cpu_count || 1;
-                    $("load1").textContent = s.load[0].toFixed(2);
+                    $("load1")
+                        .textContent = s.load[0].toFixed(2);
                     setBar("load-bar", s.load[0] / cores * 100);
-                    $("load-more").textContent = `5 min ${s.load[1]} · 15 min ${s.load[2]} · ${cores} cores`;
+                    $("load-more")
+                        .textContent = `5 min ${s.load[1]} · 15 min ${s.load[2]} · ${cores} cores`;
                 }
 
                 const m = s.memory;
                 if (m) {
                     const used = m.total - m.available;
-                    $("mem").textContent = `${fmtBytes(used)} / ${fmtBytes(m.total)}`;
+                    $("mem")
+                        .textContent = `${fmtBytes(used)} / ${fmtBytes(m.total)}`;
                     setBar("mem-bar", used / m.total * 100, 80, 92);
-                    $("swap").textContent = m.swap_total
-                        ? `Swap ${fmtBytes(m.swap_total - m.swap_free)} / ${fmtBytes(m.swap_total)} · ${fmtBytes(m.available)} free`
-                        : `${fmtBytes(m.available)} free`;
+                    $("swap")
+                        .textContent = m.swap_total ?
+                        `Swap ${fmtBytes(m.swap_total - m.swap_free)} / ${fmtBytes(m.swap_total)} · ${fmtBytes(m.available)} free` :
+                        `${fmtBytes(m.available)} free`;
                 }
 
                 const k = s.disk;
-                $("disk").textContent = `${fmtBytes(k.total - k.free)} / ${fmtBytes(k.total)}`;
+                $("disk")
+                    .textContent = `${fmtBytes(k.total - k.free)} / ${fmtBytes(k.total)}`;
                 setBar("disk-bar", (k.total - k.free) / k.total * 100);
-                $("disk-free").textContent = `${fmtBytes(k.free)} free`;
+                $("disk-free")
+                    .textContent = `${fmtBytes(k.free)} free`;
 
                 const t = s.temps || {};
                 const cpu = $("temp-cpu");
@@ -1421,9 +1548,12 @@
                 const extra = [];
                 if (t.battery_c != null) extra.push(`Battery ${t.battery_c} °C`);
                 if (t.board_c != null) extra.push(`Board ${t.board_c} °C`);
-                $("temp-more").textContent = "CPU · " + extra.join(" · ");
-                if (t.battery_c >= 45) $("temp-more").className = "small bad-text";
-                else $("temp-more").className = "small";
+                $("temp-more")
+                    .textContent = "CPU · " + extra.join(" · ");
+                if (t.battery_c >= 45) $("temp-more")
+                    .className = "small bad-text";
+                else $("temp-more")
+                    .className = "small";
 
                 renderQr(s.ip);
                 renderWifi(s.wifi);
@@ -1439,13 +1569,16 @@
         // Battery from Termux:API. A server phone should stay plugged in, so "unplugged" is a warning,
         // as are heat (swelling risk) and any health other than GOOD.
         function renderBattery(b) {
-            const pct = $("bat-pct"), state = $("bat-state"), health = $("bat-health");
+            const pct = $("bat-pct"),
+                state = $("bat-state"),
+                health = $("bat-health");
             if (!b || b.error) {
                 pct.textContent = "–";
                 state.textContent = b ? b.error : "Waiting for the first reading…";
                 state.className = "small" + (b ? " bad-text" : "");
                 health.textContent = "";
-                $("bat-alert").hidden = true;
+                $("bat-alert")
+                    .hidden = true;
                 return;
             }
             const charging = b.status === "CHARGING" || b.status === "FULL";
@@ -1456,7 +1589,8 @@
             pct.textContent = `${b.percentage}%`;
             pct.className = "value" + (b.percentage <= 20 ? " bad-text" : "");
             setBar("bat-bar", 100 - b.percentage, 70, 85); // colour by how empty it is
-            $("bat-bar").firstElementChild.style.width = b.percentage + "%";
+            $("bat-bar")
+                .firstElementChild.style.width = b.percentage + "%";
 
             // Most important problem goes in the small badge at the top right; all of them in its tooltip.
             const problems = [
@@ -1473,29 +1607,42 @@
             }
 
             // Line 1: state, current and temperature, kept short so it fits one line.
-            const how = { CHARGING: "Charging", FULL: "Full", DISCHARGING: "On battery", NOT_CHARGING: "Not charging" }[b.status] || b.status;
+            const how = {
+                CHARGING: "Charging",
+                FULL: "Full",
+                DISCHARGING: "On battery",
+                NOT_CHARGING: "Not charging"
+            } [b.status] || b.status;
             state.textContent = [
-                how,
-                b.current_ma != null ? `${Math.round(b.current_ma)} mA ${charging ? "in" : "out"}` : null,
-                b.temperature != null ? `${b.temperature.toFixed(1)} °C` : null,
-            ].filter(Boolean).join(" · ");
+                    how,
+                    b.current_ma != null ? `${Math.round(b.current_ma)} mA ${charging ? "in" : "out"}` : null,
+                    b.temperature != null ? `${b.temperature.toFixed(1)} °C` : null,
+                ].filter(Boolean)
+                .join(" · ");
             state.className = "small" + (hot ? " bad-text" : "");
-            const plug = { PLUGGED_AC: "charger", PLUGGED_USB: "USB", PLUGGED_WIRELESS: "wireless" }[b.plugged];
+            const plug = {
+                PLUGGED_AC: "charger",
+                PLUGGED_USB: "USB",
+                PLUGGED_WIRELESS: "wireless"
+            } [b.plugged];
             state.title = plug ? `Plugged into ${plug}` : "";
 
             // Line 2: ♥ health and capacity estimate; the mAh detail is in the tooltip.
-            const line = el("span", { class: "inline-icon" });
+            const line = el("span", {
+                class: "inline-icon"
+            });
             line.append(icon("heart-pulse"), document.createTextNode(
                 (b.health || "?") + (b.est_capacity_pct != null ? ` · ~${Math.round(b.est_capacity_pct)}% capacity` : "")));
             health.replaceChildren(line);
-            health.title = b.est_full_mah != null
-                ? `Holds about ${Math.round(b.est_full_mah).toLocaleString()} of ${Math.round(b.design_mah).toLocaleString()} mAh when full (estimate from the phone's charge counter)`
-                : "";
+            health.title = b.est_full_mah != null ?
+                `Holds about ${Math.round(b.est_full_mah).toLocaleString()} of ${Math.round(b.design_mah).toLocaleString()} mAh when full (estimate from the phone's charge counter)` :
+                "";
             health.className = "small" + (unhealthy ? " bad-text" : "");
 
             // Swap the label icon to match the state.
             const name = unhealthy || hot ? "battery-warning" : charging ? "battery-charging" : b.percentage <= 20 ? "battery-low" : "battery";
-            const old = $("battery-card").querySelector(".label svg");
+            const old = $("battery-card")
+                .querySelector(".label svg");
             if (old && old.dataset.state !== name && window.dashboardIcon) {
                 const svg = window.dashboardIcon(name, "icon");
                 svg.dataset.state = name;
@@ -1506,23 +1653,33 @@
         // Wi-Fi the phone is on, and evil-twin hints: an access point (BSSID) never seen before under
         // this name, or other access points nearby broadcasting the same name.
         // Names come from the air and could contain anything, so they are only ever set as text.
-        const shortDate = (ts) => new Date(ts * 1000).toLocaleDateString([], { day: "numeric", month: "short" });
+        const shortDate = (ts) => new Date(ts * 1000)
+            .toLocaleDateString([], {
+                day: "numeric",
+                month: "short"
+            });
+
         function iconLine(iconName, text, title) {
-            const span = el("span", { class: "inline-icon" });
+            const span = el("span", {
+                class: "inline-icon"
+            });
             span.append(icon(iconName), document.createTextNode(text));
             if (title) span.title = title;
             return span;
         }
 
         function renderWifi(w) {
-            const line = $("wifi-line"), ap = $("wifi-ap"), alert = $("wifi-alert");
+            const line = $("wifi-line"),
+                ap = $("wifi-ap"),
+                alert = $("wifi-alert");
             alert.hidden = true;
             ap.replaceChildren();
             if (!w || w.error) {
                 line.replaceChildren(iconLine("wifi-off", w ? w.error : "Wi-Fi: waiting for the first reading…"));
                 return;
             }
-            const details = [w.band, w.rssi != null ? `${w.rssi} dBm ${w.signal}` : null].filter(Boolean).join(" · ");
+            const details = [w.band, w.rssi != null ? `${w.rssi} dBm ${w.signal}` : null].filter(Boolean)
+                .join(" · ");
             if (!w.ssid) {
                 line.replaceChildren(iconLine("wifi", `Wi-Fi: name hidden${details ? " · " + details : ""}`, w.hint));
                 ap.replaceChildren(iconLine("shield-alert", "Allow Location for Termux:API to see it", w.hint));
@@ -1539,11 +1696,13 @@
                 alert.hidden = false;
                 alert.replaceChildren(icon("triangle-alert"), document.createTextNode(problems[0]));
                 alert.title = [
-                    w.new_access_point && `Connected to an access point first seen ${shortDate(w.bssid_first_seen)}; ` +
+                        w.new_access_point && `Connected to an access point first seen ${shortDate(w.bssid_first_seen)}; ` +
                         `this name was seen before on ${(w.known_other_bssids || []).map(o => o.bssid).join(", ")}`,
-                    lookalikes.length && "Same name, different access point: " +
-                        lookalikes.map(n => `${n.bssid} (${n.rssi} dBm${n.band ? ", " + n.band : ""})`).join(", "),
-                ].filter(Boolean).join("\n");
+                        lookalikes.length && "Same name, different access point: " +
+                        lookalikes.map(n => `${n.bssid} (${n.rssi} dBm${n.band ? ", " + n.band : ""})`)
+                        .join(", "),
+                    ].filter(Boolean)
+                    .join("\n");
             }
             if (w.bssid) {
                 const trusted = !problems.length;
@@ -1558,37 +1717,59 @@
 
         // QR for the server's own Wi-Fi address (not location.host: on the phone itself that is 127.0.0.1).
         let qrUrl = "";
+
         function renderQr(ip) {
             const host = ip || location.hostname;
             const url = `http://${host}${location.port ? ":" + location.port : ""}/`;
             if (url === qrUrl || !window.dashboardQr) return;
             qrUrl = url;
-            $("qr").innerHTML = window.dashboardQr(url);
-            $("qr-url").textContent = url.replace(/\/$/, "");
-            $("qr-ssh").textContent = `ssh -p 8022 u0_a174@${host}`;
+            $("qr")
+                .innerHTML = window.dashboardQr(url);
+            $("qr-url")
+                .textContent = url.replace(/\/$/, "");
+            $("qr-ssh")
+                .textContent = `ssh -p 8022 u0_a174@${host}`;
         }
 
         function renderServices(list) {
             const box = $("services");
             box.replaceChildren();
             if (!list.length) {
-                box.append(el("div", { class: "card small" }, "No service info"));
+                box.append(el("div", {
+                    class: "card small"
+                }, "No service info"));
                 return;
             }
             for (const svc of list) {
                 const up = svc.state === "run";
                 const off = !up && svc.enabled === false;
                 const [label, iconName] = SERVICES[svc.name] || [svc.name, "box"];
-                const card = el("div", { class: "card svc" + (up ? "" : " is-down") });
-                const tile = el("span", { class: "svc-icon" });
-                tile.append(icon(iconName, "icon"), el("span", { class: "dot " + (up ? "good" : off ? "" : "bad") }));
+                const card = el("div", {
+                    class: "card svc" + (up ? "" : " is-down")
+                });
+                const tile = el("span", {
+                    class: "svc-icon"
+                });
+                tile.append(icon(iconName, "icon"), el("span", {
+                    class: "dot " + (up ? "good" : off ? "" : "bad")
+                }));
                 card.append(tile);
-                const name = el("div", { class: "svc-text" });
-                name.append(el("div", { class: "name" }, label));
-                name.append(el("div", { class: "small" }, svc.name));
-                if (svc.version) name.append(el("span", { class: "version" }, svc.version));
+                const name = el("div", {
+                    class: "svc-text"
+                });
+                name.append(el("div", {
+                    class: "name"
+                }, label));
+                name.append(el("div", {
+                    class: "small"
+                }, svc.name));
+                if (svc.version) name.append(el("span", {
+                    class: "version"
+                }, svc.version));
                 card.append(name);
-                const meta = el("div", { class: "meta small" });
+                const meta = el("div", {
+                    class: "meta small"
+                });
                 meta.append(el("div", {}, up ? "up " + fmtDuration(svc.since_s) : off ? "off" : "down " + fmtDuration(svc.since_s)));
                 if (svc.pid) meta.append(el("div", {}, "pid " + svc.pid));
                 card.append(meta);
@@ -1598,8 +1779,10 @@
 
         function renderStatus() {
             const fresh = Date.now() - lastStatsOk < 15000;
-            $("status-dot").className = "dot " + (fresh ? "good" : lastStatsOk ? "bad" : "warn");
-            $("status-text").textContent = fresh ? "Online" : lastStatsOk ? "API not responding" : "Connecting…";
+            $("status-dot")
+                .className = "dot " + (fresh ? "good" : lastStatsOk ? "bad" : "warn");
+            $("status-text")
+                .textContent = fresh ? "Online" : lastStatsOk ? "API not responding" : "Connecting…";
         }
 
         // ---------- bot ----------
@@ -1609,7 +1792,12 @@
             if (bots.length < 2) return;
             for (const b of bots) {
                 const s = b.state;
-                const tab = el("button", { class: "bot-tab", type: "button", role: "tab", "aria-selected": String(b.bot === selectedBot) });
+                const tab = el("button", {
+                    class: "bot-tab",
+                    type: "button",
+                    role: "tab",
+                    "aria-selected": String(b.bot === selectedBot)
+                });
                 const title = el("b");
                 title.append(icon(BOT_ICONS[b.bot] || "bot", "icon"), document.createTextNode(s.title || "SMA bot"));
                 tab.append(title);
@@ -1623,50 +1811,71 @@
         async function refreshBot() {
             try {
                 const bots = await api("/api/bots");
-                if (!bots.some(b => b.bot === selectedBot)) selectedBot = (bots.find(b => b.bot === "paper-sma") || bots[0] || {}).bot;
+                if (!bots.some(b => b.bot === selectedBot)) selectedBot = (bots.find(b => b.bot === "paper-sma") || bots[0] || {})
+                    .bot;
                 renderTabs(bots);
                 if (!selectedBot) throw new Error("no bots yet");
                 const b = await api(`/api/bots/${selectedBot}?points=600`);
                 renderBot(b);
             } catch (e) {
-                $("bot-notice").replaceChildren(el("div", { class: "notice" },
-                    "Bot data not available yet. The bot writes its first price within a minute of starting."));
+                $("bot-notice")
+                    .replaceChildren(el("div", {
+                            class: "notice"
+                        },
+                        "Bot data not available yet. The bot writes its first price within a minute of starting."));
             }
         }
 
         function renderBot(b) {
             const s = b.state;
-            $("bot-title").textContent = `${s.title || "SMA bot"} · ${s.symbol}`;
-            $("bot-strategy").textContent =
+            $("bot-title")
+                .textContent = `${s.title || "SMA bot"} · ${s.symbol}`;
+            $("bot-strategy")
+                .textContent =
                 `${s.strategy} · checks every ${s.interval_s}s · fee ${(s.fee * 100).toFixed(2)}% · started with ${usd(s.start_cash, 0)}`;
-            $("bot-exits").textContent = s.exits ? `Exits: ${s.exits}` : "";
+            $("bot-exits")
+                .textContent = s.exits ? `Exits: ${s.exits}` : "";
 
-            $("bot-signals").replaceChildren(...(s.signals || []).map(sig => {
-                const chip = el("span", { class: "signal" + (sig.ok === true ? " ok" : sig.ok === false ? " no" : "") }, sig.name + " ");
-                chip.append(el("b", {}, sig.value));
-                return chip;
-            }));
-            $("bot-price").textContent = usd(s.price);
-            $("bot-updated").textContent = s.last_ok ? `Updated ${ago(s.last_ok)} · source ${s.source}` : "";
+            $("bot-signals")
+                .replaceChildren(...(s.signals || [])
+                    .map(sig => {
+                        const chip = el("span", {
+                            class: "signal" + (sig.ok === true ? " ok" : sig.ok === false ? " no" : "")
+                        }, sig.name + " ");
+                        chip.append(el("b", {}, sig.value));
+                        return chip;
+                    }));
+            $("bot-price")
+                .textContent = usd(s.price);
+            $("bot-updated")
+                .textContent = s.last_ok ? `Updated ${ago(s.last_ok)} · source ${s.source}` : "";
 
             const notices = [];
-            if (s.last_error) notices.push(el("div", { class: "notice error" }, `Last error (${ago(s.last_error_at)}): ${s.last_error}`));
+            if (s.last_error) notices.push(el("div", {
+                class: "notice error"
+            }, `Last error (${ago(s.last_error_at)}): ${s.last_error}`));
             if (s.warmup_left > 0) {
                 const afterGap = s.last_gap_reset && Date.now() / 1000 - s.last_gap_reset < (s.slow_n + 5) * s.interval_s;
-                notices.push(el("div", { class: "notice" },
+                notices.push(el("div", {
+                        class: "notice"
+                    },
                     (afterGap ? "Prices stopped for a while, so the averages restarted from fresh data. " : "") +
                     `Warming up: ${s.warmup_left} more price${s.warmup_left > 1 ? "s" : ""} needed before the slow average is ready (about ${fmtDuration(s.warmup_left * s.interval_s)}).`));
             }
-            $("bot-notice").replaceChildren(...notices);
+            $("bot-notice")
+                .replaceChildren(...notices);
 
-            $("bot-equity").textContent = usd(s.equity);
+            $("bot-equity")
+                .textContent = usd(s.equity);
             const pnl = $("bot-pnl");
             if (s.pnl_pct != null) {
                 pnl.textContent = (s.pnl_pct >= 0 ? "+" : "") + s.pnl_pct.toFixed(2) + "%";
                 pnl.className = "value " + (s.pnl_pct > 0 ? "good-text" : s.pnl_pct < 0 ? "bad-text" : "");
             }
-            $("bot-position").textContent = s.qty > 0 ? `${isShort(s) ? "Short " : ""}${s.qty.toFixed(6)} ${s.base}` : "Cash";
-            $("bot-trades").textContent = s.trades;
+            $("bot-position")
+                .textContent = s.qty > 0 ? `${isShort(s) ? "Short " : ""}${s.qty.toFixed(6)} ${s.base}` : "Cash";
+            $("bot-trades")
+                .textContent = s.trades;
 
             const fastLabel = s.fast_label !== undefined ? s.fast_label : `SMA ${s.fast_n}`;
             const slowLabel = s.slow_label !== undefined ? s.slow_label : `SMA ${s.slow_n}`;
@@ -1683,13 +1892,17 @@
                 renderBook(m.state, m.candles);
                 window.dashboardChart?.updateMarket(m.candles, m.book);
             } catch (e) {
-                $("book-source").textContent = "Market data not available yet. The collector writes its first snapshot within a minute of starting.";
+                $("book-source")
+                    .textContent = "Market data not available yet. The collector writes its first snapshot within a minute of starting.";
             }
         }
 
         function ladderRows(levels, maxSize, color) {
             return levels.map(([price, size]) => {
-                const row = el("div", { class: "ladder-row", style: `--w:${(size / maxSize * 100).toFixed(1)}%; --c:${color}` });
+                const row = el("div", {
+                    class: "ladder-row",
+                    style: `--w:${(size / maxSize * 100).toFixed(1)}%; --c:${color}`
+                });
                 row.append(el("span", {}, usd(price)), el("span", {}, size.toFixed(4)));
                 return row;
             });
@@ -1697,37 +1910,62 @@
 
         function renderBook(s, candles) {
             if (s.bid == null) return;
-            $("book-bid").textContent = usd(s.bid);
-            $("book-ask").textContent = usd(s.ask);
-            $("book-spread").textContent = s.spread < 0.1 ? "< $0.10" : usd(s.spread);
+            $("book-bid")
+                .textContent = usd(s.bid);
+            $("book-ask")
+                .textContent = usd(s.ask);
+            $("book-spread")
+                .textContent = s.spread < 0.1 ? "< $0.10" : usd(s.spread);
 
             const hourAgo = Date.now() / 1000 - 3600;
-            const volume = candles.filter(c => c.ts >= hourAgo).reduce((sum, c) => sum + c.volume, 0);
-            $("vol-hour").textContent = volume.toFixed(2) + " BTC";
+            const volume = candles.filter(c => c.ts >= hourAgo)
+                .reduce((sum, c) => sum + c.volume, 0);
+            $("vol-hour")
+                .textContent = volume.toFixed(2) + " BTC";
 
             const buyShare = s.bid_depth / (s.bid_depth + s.ask_depth) * 100;
-            $("pressure-bid").style.width = buyShare.toFixed(1) + "%";
-            $("pressure-buy").textContent = `Buyers ${buyShare.toFixed(0)}% · ${s.bid_depth.toFixed(2)} BTC`;
-            $("pressure-sell").textContent = `${s.ask_depth.toFixed(2)} BTC · ${(100 - buyShare).toFixed(0)}% Sellers`;
-            $("pressure-range").textContent = `resting orders ${usd(s.range_low, 0)}–${usd(s.range_high, 0)}`;
+            $("pressure-bid")
+                .style.width = buyShare.toFixed(1) + "%";
+            $("pressure-buy")
+                .textContent = `Buyers ${buyShare.toFixed(0)}% · ${s.bid_depth.toFixed(2)} BTC`;
+            $("pressure-sell")
+                .textContent = `${s.ask_depth.toFixed(2)} BTC · ${(100 - buyShare).toFixed(0)}% Sellers`;
+            $("pressure-range")
+                .textContent = `resting orders ${usd(s.range_low, 0)}–${usd(s.range_high, 0)}`;
 
             const maxSize = Math.max(...s.bids.map(l => l[1]), ...s.asks.map(l => l[1]), 1e-9);
-            $("ladder-bids").replaceChildren(...ladderRows(s.bids, maxSize, "var(--good)"));
-            $("ladder-asks").replaceChildren(...ladderRows(s.asks, maxSize, "var(--bad)"));
+            $("ladder-bids")
+                .replaceChildren(...ladderRows(s.bids, maxSize, "var(--good)"));
+            $("ladder-asks")
+                .replaceChildren(...ladderRows(s.asks, maxSize, "var(--bad)"));
 
-            const errors = Object.entries(s.errors || {}).map(([k, v]) => `${k}: ${v}`).join(" · ");
-            $("book-source").textContent = `Order book: ${s.book_source} · Volume: ${s.candle_source}` +
+            const errors = Object.entries(s.errors || {})
+                .map(([k, v]) => `${k}: ${v}`)
+                .join(" · ");
+            $("book-source")
+                .textContent = `Order book: ${s.book_source} · Volume: ${s.candle_source}` +
                 (s.book_at ? ` · updated ${ago(s.book_at)}` : "") + (errors ? ` · error ${errors}` : "");
         }
 
         const signedUsd = (v) => (v >= 0 ? "+" : "−") + usd(Math.abs(v));
-        const signedPct = (v) => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(2) + "%";
-        const tradeTime = (ts) => new Date(ts * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+        const signedPct = (v) => (v >= 0 ? "+" : "−") + Math.abs(v)
+            .toFixed(2) + "%";
+        const tradeTime = (ts) => new Date(ts * 1000)
+            .toLocaleString([], {
+                month: "short",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit"
+            });
 
         function cell(cls, main, sub) {
-            const td = el("td", cls ? { class: cls } : {});
+            const td = el("td", cls ? {
+                class: cls
+            } : {});
             td.append(main instanceof Node ? main : document.createTextNode(main));
-            if (sub) td.append(el("span", { class: "sub" }, sub));
+            if (sub) td.append(el("span", {
+                class: "sub"
+            }, sub));
             return td;
         }
 
@@ -1737,7 +1975,9 @@
             if (summary && summary.closed) {
                 const stat = (label, value, cls) => {
                     const span = el("span", {}, label + " ");
-                    span.append(el("b", cls ? { class: cls } : {}, value));
+                    span.append(el("b", cls ? {
+                        class: cls
+                    } : {}, value));
                     return span;
                 };
                 const realized = summary.realized_pnl;
@@ -1761,17 +2001,25 @@
             body.replaceChildren();
             if (!trips.length) {
                 const row = el("tr");
-                row.append(el("td", { colspan: 6, class: "small" }, "No trades yet. The bot buys when the fast average crosses above the slow one."));
+                row.append(el("td", {
+                    colspan: 6,
+                    class: "small"
+                }, "No trades yet. The bot buys when the fast average crosses above the slow one."));
                 body.append(row);
                 return;
             }
-            const total = trips.filter(t => !t.open).length;
+            const total = trips.filter(t => !t.open)
+                .length;
             let number = total;
             for (const t of trips) {
-                const row = el("tr", t.open ? { class: "open-trip" } : {});
+                const row = el("tr", t.open ? {
+                    class: "open-trip"
+                } : {});
                 const resultCls = "num result " + (t.pnl > 0 ? "good-text" : t.pnl < 0 ? "bad-text" : "");
                 const amount = `${t.qty.toFixed(6)} ${base}`;
-                row.append(cell("small", t.open ? el("span", { class: "tag" }, "OPEN") : String(number--)));
+                row.append(cell("small", t.open ? el("span", {
+                    class: "tag"
+                }, "OPEN") : String(number--)));
                 row.append(cell("", `${t.side === "short" ? "Short" : "Buy"} ${usd(t.entry_price)}`, `${tradeTime(t.entry_ts)} · ${amount}`));
                 if (t.open) {
                     row.append(cell("", t.side === "short" ? "Still short" : "Still holding", `price ${usd(t.exit_price)} now`));
@@ -1798,58 +2046,91 @@
         // Phone details dialog: click the header photo. Specs come from /api/device (read once on the phone);
         // live numbers (RAM, storage, battery, uptime) reuse the latest /api/stats reading.
         let deviceTimer = null;
+
         function pdSection(iconName, title, rows, extra) {
-            const sec = el("section", { class: "pd-sec" });
+            const sec = el("section", {
+                class: "pd-sec"
+            });
             const h = el("h4");
             h.append(icon(iconName), document.createTextNode(title));
             sec.append(h);
             if (extra) sec.append(extra);
             for (const [k, v] of rows) {
                 if (v == null || v === "") continue;
-                const row = el("div", { class: "pd-row" });
+                const row = el("div", {
+                    class: "pd-row"
+                });
                 row.append(el("span", {}, k), el("span", {}, String(v)));
                 sec.append(row);
             }
             return sec;
         }
+
         function pdCores(cpu, now) {
             const wrap = el("div");
             const max = Math.max(...cpu.clusters.map((c) => c.max_mhz || 0)) || 1;
-            const bars = el("div", { class: "pd-cores", title: "Current speed of each core" });
-            const lbls = el("div", { class: "pd-core-lbl" });
+            const bars = el("div", {
+                class: "pd-cores",
+                title: "Current speed of each core"
+            });
+            const lbls = el("div", {
+                class: "pd-core-lbl"
+            });
             const cols = `repeat(${(now || []).length || 1}, 1fr)`;
             bars.style.gridTemplateColumns = lbls.style.gridTemplateColumns = cols;
-            (now || []).forEach((mhz, i) => {
-                const b = el("div", { class: "pd-core", title: `Core ${i}: ${mhz ?? "?"} MHz` });
+            (now || [])
+            .forEach((mhz, i) => {
+                const b = el("div", {
+                    class: "pd-core",
+                    title: `Core ${i}: ${mhz ?? "?"} MHz`
+                });
                 const fill = el("div");
                 fill.style.height = Math.min(100, (mhz || 0) / max * 100) + "%";
                 b.append(fill);
                 bars.append(b);
-                lbls.append(el("span", {}, mhz != null ? (mhz / 1000).toFixed(1) : "–"));
+                lbls.append(el("span", {}, mhz != null ? (mhz / 1000)
+                    .toFixed(1) : "–"));
             });
-            const cap = el("div", { class: "small", title: "Each core speeds up when busy and drops to its slowest speed (0.65 GHz) to save power when idle" },
+            const cap = el("div", {
+                    class: "small",
+                    title: "Each core speeds up when busy and drops to its slowest speed (0.65 GHz) to save power when idle"
+                },
                 `Each core's speed right now, GHz (max ${(max / 1000).toFixed(1)}). Low = idle, saving power.`);
             wrap.append(bars, lbls, cap);
             return wrap;
         }
+
         function renderDevice(d) {
             const s = lastStats || {};
-            const ghz = (m) => m != null ? (m / 1000).toFixed(2) + " GHz" : "";
-            $("pd-maker").textContent = d.manufacturer || "";
-            $("pd-title").textContent = d.model || "Phone";
-            $("pd-sub").textContent = d.codename ? `Codename ${d.codename}` : "";
+            const ghz = (m) => m != null ? (m / 1000)
+                .toFixed(2) + " GHz" : "";
+            $("pd-maker")
+                .textContent = d.manufacturer || "";
+            $("pd-title")
+                .textContent = d.model || "Phone";
+            $("pd-sub")
+                .textContent = d.codename ? `Codename ${d.codename}` : "";
             const chips = $("pd-chips");
             chips.replaceChildren(...[d.soc.name, d.memory.ram_total && fmtBytes(d.memory.ram_total) + " RAM",
-                d.os.android && "Android " + d.os.android, d.os.miui && "MIUI " + d.os.miui]
-                .filter(Boolean).map((t) => el("span", { class: "pd-chip" }, t)));
+                    d.os.android && "Android " + d.os.android, d.os.miui && "MIUI " + d.os.miui
+                ]
+                .filter(Boolean)
+                .map((t) => el("span", {
+                    class: "pd-chip"
+                }, t)));
 
             const cpu = d.cpu;
-            const clusters = cpu.clusters.map((c) => `${c.count} × ${ghz(c.min_mhz)}–${ghz(c.max_mhz)}`).join(" + ");
-            const m = s.memory || {}, k = s.disk || {}, b = s.battery || {};
+            const clusters = cpu.clusters.map((c) => `${c.count} × ${ghz(c.min_mhz)}–${ghz(c.max_mhz)}`)
+                .join(" + ");
+            const m = s.memory || {},
+                k = s.disk || {},
+                b = s.battery || {};
             const sec = d.security || {};
             const specs = [
                 pdSection("cpu", "Chip & CPU", [
-                    ["Chip", [d.soc.name, d.soc.platform && `(${d.soc.platform})`].filter(Boolean).join(" ")],
+                    ["Chip", [d.soc.name, d.soc.platform && `(${d.soc.platform})`].filter(Boolean)
+                        .join(" ")
+                    ],
                     ["Made on", d.soc.process],
                     ["CPU", `${cpu.cores} cores · ${cpu.type}`],
                     ["Speed range", clusters],
@@ -1872,7 +2153,9 @@
                 ]),
                 pdSection("smartphone", "Software", [
                     ["Android", d.os.android && `${d.os.android} (API ${d.os.sdk})`],
-                    ["MIUI", [d.os.miui, d.os.build].filter(Boolean).join(" · ")],
+                    ["MIUI", [d.os.miui, d.os.build].filter(Boolean)
+                        .join(" · ")
+                    ],
                     ["Security patch", d.os.security_patch],
                     ["Built", d.os.build_date],
                     ["Linux kernel", d.os.kernel && `${d.os.kernel} (${d.os.arch})`],
@@ -1891,37 +2174,53 @@
                     ["Now", b.percentage != null ? `${b.percentage}% · ${String(b.status || "").toLowerCase()}` : ""],
                     ["Health", b.health],
                     ["Estimated capacity", b.est_full_mah ? `${Math.round(b.est_full_mah).toLocaleString()} mAh (~${Math.round(b.est_capacity_pct)}%)` : ""],
-                    ["Voltage", b.voltage_mv ? (b.voltage_mv / 1000).toFixed(2) + " V" : ""],
+                    ["Voltage", b.voltage_mv ? (b.voltage_mv / 1000)
+                        .toFixed(2) + " V" : ""
+                    ],
                 ]),
             ];
-            const pub = Object.entries(d.published || {}).filter(([key]) => key !== "Screen" && key !== "Battery (design)");
+            const pub = Object.entries(d.published || {})
+                .filter(([key]) => key !== "Screen" && key !== "Battery (design)");
             if (pub.length) specs.push(pdSection("camera", "Hardware (from the spec sheet)", pub));
-            $("pd-specs").replaceChildren(...specs);
+            $("pd-specs")
+                .replaceChildren(...specs);
         }
         async function refreshDevice() {
             try {
                 renderDevice(await api("/api/device"));
             } catch (e) {
-                if (!$("pd-specs").querySelector(".pd-sec")) {
-                    $("pd-specs").replaceChildren(el("div", { class: "small bad-text" }, "Couldn't load the phone details. Is the API updated?"));
+                if (!$("pd-specs")
+                    .querySelector(".pd-sec")) {
+                    $("pd-specs")
+                        .replaceChildren(el("div", {
+                            class: "small bad-text"
+                        }, "Couldn't load the phone details. Is the API updated?"));
                 }
             }
         }
+
         function openPhone() {
             const dlg = $("phone-dialog");
             if (dlg.open) return;
             dlg.showModal();
             document.body.classList.add("pd-lock");
             refreshDevice();
-            deviceTimer = setInterval(refreshDevice, 3000);  // live core speeds while it's open
+            deviceTimer = setInterval(refreshDevice, 3000); // live core speeds while it's open
         }
-        $("phone-open").addEventListener("click", openPhone);
-        $("pd-close").addEventListener("click", () => $("phone-dialog").close());
-        $("phone-dialog").addEventListener("click", (e) => { if (e.target === e.currentTarget) e.currentTarget.close(); });
-        $("phone-dialog").addEventListener("close", () => {
-            clearInterval(deviceTimer);
-            document.body.classList.remove("pd-lock");
-        });
+        $("phone-open")
+            .addEventListener("click", openPhone);
+        $("pd-close")
+            .addEventListener("click", () => $("phone-dialog")
+                .close());
+        $("phone-dialog")
+            .addEventListener("click", (e) => {
+                if (e.target === e.currentTarget) e.currentTarget.close();
+            });
+        $("phone-dialog")
+            .addEventListener("close", () => {
+                clearInterval(deviceTimer);
+                document.body.classList.remove("pd-lock");
+            });
 
         window.dashboardChart?.init();
         refreshStats();
