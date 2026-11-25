@@ -714,6 +714,7 @@
         }
 
         .qr-info {
+            flex: 1;
             min-width: 0;
         }
 
@@ -946,9 +947,10 @@
             <div class="card qr-card">
                 <div class="qr" id="qr" role="img" aria-label="QR code for the dashboard address"></div>
                 <div class="qr-info">
-                    <div class="label"><i data-lucide="wifi"></i>Network · open on another device</div>
+                    <div class="label"><i data-lucide="wifi"></i>Network · scan to open<span class="card-alert" id="wifi-alert" hidden></span></div>
                     <div class="value" id="qr-url">–</div>
-                    <div class="small">Scan with a phone on the same Wi-Fi / hotspot.</div>
+                    <div class="small" id="wifi-line">Wi-Fi: –</div>
+                    <div class="small" id="wifi-ap"></div>
                     <code id="qr-ssh"></code>
                 </div>
             </div>
@@ -1059,7 +1061,7 @@
         <footer>Self-hosted on an old phone · refreshes automatically</footer>
     </div>
 
-    <script src="assets/dashboard.bundle.js?v=c5b0070aa7"></script>
+    <script src="assets/dashboard.bundle.js?v=23f0d5f4b6"></script>
     <script>
         const $ = (id) => document.getElementById(id);
         let lastStatsOk = 0;
@@ -1186,6 +1188,7 @@
                 else $("temp-more").className = "small";
 
                 renderQr(s.ip);
+                renderWifi(s.wifi);
                 renderBattery(s.battery);
 
                 renderServices(s.services || []);
@@ -1259,6 +1262,59 @@
                 const svg = window.dashboardIcon(name, "icon");
                 svg.dataset.state = name;
                 old.replaceWith(svg);
+            }
+        }
+
+        // Wi-Fi the phone is on, and evil-twin hints: an access point (BSSID) never seen before under
+        // this name, or other access points nearby broadcasting the same name.
+        // Names come from the air and could contain anything, so they are only ever set as text.
+        const shortDate = (ts) => new Date(ts * 1000).toLocaleDateString([], { day: "numeric", month: "short" });
+        function iconLine(iconName, text, title) {
+            const span = el("span", { class: "inline-icon" });
+            span.append(icon(iconName), document.createTextNode(text));
+            if (title) span.title = title;
+            return span;
+        }
+
+        function renderWifi(w) {
+            const line = $("wifi-line"), ap = $("wifi-ap"), alert = $("wifi-alert");
+            alert.hidden = true;
+            ap.replaceChildren();
+            if (!w || w.error) {
+                line.replaceChildren(iconLine("wifi-off", w ? w.error : "Wi-Fi: waiting for the first reading…"));
+                return;
+            }
+            const details = [w.band, w.rssi != null ? `${w.rssi} dBm ${w.signal}` : null].filter(Boolean).join(" · ");
+            if (!w.ssid) {
+                line.replaceChildren(iconLine("wifi", `Wi-Fi: name hidden${details ? " · " + details : ""}`, w.hint));
+                ap.replaceChildren(iconLine("shield-alert", "Allow Location for Termux:API to see it", w.hint));
+                return;
+            }
+            line.replaceChildren(iconLine("wifi", `${w.ssid}${details ? " · " + details : ""}`,
+                `Link ${w.link_speed_mbps ?? "?"} Mbps · ${w.frequency_mhz ?? "?"} MHz`));
+
+            const lookalikes = w.same_name_nearby || [];
+            const problems = [];
+            if (w.new_access_point) problems.push("New access point");
+            if (lookalikes.length) problems.push(`${lookalikes.length} look-alike${lookalikes.length > 1 ? "s" : ""} nearby`);
+            if (problems.length) {
+                alert.hidden = false;
+                alert.replaceChildren(icon("triangle-alert"), document.createTextNode(problems[0]));
+                alert.title = [
+                    w.new_access_point && `Connected to an access point first seen ${shortDate(w.bssid_first_seen)}; ` +
+                        `this name was seen before on ${(w.known_other_bssids || []).map(o => o.bssid).join(", ")}`,
+                    lookalikes.length && "Same name, different access point: " +
+                        lookalikes.map(n => `${n.bssid} (${n.rssi} dBm${n.band ? ", " + n.band : ""})`).join(", "),
+                ].filter(Boolean).join("\n");
+            }
+            if (w.bssid) {
+                const trusted = !problems.length;
+                ap.replaceChildren(iconLine(trusted ? "shield-check" : "shield-alert",
+                    `AP ${w.bssid} · since ${shortDate(w.bssid_first_seen)}`,
+                    "The access point's hardware address (BSSID). It is unique per access point, so a different one " +
+                    "under the same name means a different device. A determined attacker can copy it, so treat this " +
+                    "as an early warning, not proof."));
+                ap.className = "small" + (trusted ? "" : " bad-text");
             }
         }
 

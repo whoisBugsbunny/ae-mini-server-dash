@@ -2,15 +2,15 @@
 import {
     Activity, ArrowDownUp, ArrowLeftRight, Battery, BatteryCharging, BatteryLow, BatteryWarning, BookOpen, Bot, Box,
     ChartCandlestick, ChartColumn, ChartLine, CircleDot, Clock, Coins, Cpu, Crosshair, Globe, HardDrive, HeartPulse,
-    KeyRound, Layers, MemoryStick, QrCode, Server, ServerCog, SquareTerminal, Thermometer, TrendingDown, TrendingUp,
-    TriangleAlert, Wallet, Waves, Wifi, createElement, createIcons,
+    KeyRound, Layers, MemoryStick, QrCode, Server, ServerCog, ShieldAlert, ShieldCheck, SquareTerminal, Thermometer, TrendingDown, TrendingUp,
+    TriangleAlert, Wallet, Waves, Wifi, WifiOff, createElement, createIcons,
 } from "lucide";
 
 const ICONS = {
     Activity, ArrowDownUp, ArrowLeftRight, Battery, BatteryCharging, BatteryLow, BatteryWarning, BookOpen, Bot, Box,
     ChartCandlestick, ChartColumn, ChartLine, CircleDot, Clock, Coins, Cpu, Crosshair, Globe, HardDrive, HeartPulse,
-    KeyRound, Layers, MemoryStick, QrCode, Server, ServerCog, SquareTerminal, Thermometer, TrendingDown, TrendingUp,
-    TriangleAlert, Wallet, Waves, Wifi,
+    KeyRound, Layers, MemoryStick, QrCode, Server, ServerCog, ShieldAlert, ShieldCheck, SquareTerminal, Thermometer, TrendingDown, TrendingUp,
+    TriangleAlert, Wallet, Waves, Wifi, WifiOff,
 };
 
 // kebab-case name ("chart-line") -> icon node, the same names <i data-lucide="..."> uses.
