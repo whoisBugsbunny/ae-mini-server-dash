@@ -72,6 +72,21 @@
             border-radius: 8px;
         }
 
+        button.icon {
+            padding: 0;
+            background: none;
+            color: inherit;
+            cursor: zoom-in;
+            transition: border-color .15s, transform .15s;
+        }
+
+        button.icon:hover,
+        button.icon:focus-visible {
+            border-color: var(--accent);
+            transform: scale(1.04);
+            outline: none;
+        }
+
         .brand .icon img {
             display: block;
             width: 100%;
@@ -888,6 +903,186 @@
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
         }
+        /* Phone details dialog (opened from the header photo) */
+        .phone-dialog {
+            width: min(1020px, calc(100vw - 32px));
+            max-height: calc(100vh - 32px);
+            padding: 0;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--card);
+            color: var(--text);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, .55);
+            overflow: auto;
+        }
+
+        .phone-dialog::backdrop {
+            background: rgba(8, 9, 8, .55);
+            backdrop-filter: blur(10px) saturate(.8);
+            -webkit-backdrop-filter: blur(10px) saturate(.8);
+        }
+
+        .phone-dialog[open] {
+            animation: pd-in .18s ease-out;
+        }
+
+        @keyframes pd-in {
+            from { opacity: 0; transform: translateY(10px) scale(.98); }
+        }
+
+        .pd-close {
+            position: sticky;
+            float: right;
+            top: 10px;
+            margin: 10px 10px -46px 0;
+            z-index: 2;
+            width: 36px;
+            height: 36px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: var(--inset);
+            color: var(--text);
+            cursor: pointer;
+        }
+
+        .pd-close:hover { border-color: var(--accent); }
+        .pd-close svg { width: 18px; height: 18px; }
+
+        .pd-body {
+            display: grid;
+            grid-template-columns: minmax(260px, 380px) 1fr;
+        }
+
+        .pd-photo {
+            padding: 28px 24px;
+            background: radial-gradient(circle at 50% 35%, rgba(198, 239, 99, .10), transparent 65%), var(--inset);
+            border-right: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .pd-photo img {
+            width: 100%;
+            max-width: 340px;
+            height: auto;
+            filter: drop-shadow(0 18px 30px rgba(0, 0, 0, .5));
+        }
+
+        .pd-maker {
+            color: var(--accent);
+            font-size: .75rem;
+            font-weight: 700;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            margin-top: 10px;
+        }
+
+        .pd-name h3 {
+            margin: 2px 0 4px;
+            font: 600 1.7rem/1.15 Georgia, "Times New Roman", serif;
+        }
+
+        .pd-chips {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 6px;
+            margin-top: 14px;
+        }
+
+        .pd-chip {
+            padding: 4px 9px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            font-size: .76rem;
+            font-weight: 600;
+        }
+
+        .pd-specs {
+            padding: 24px 26px 26px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 14px;
+            align-content: start;
+        }
+
+        .pd-sec {
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            background: var(--inset);
+            padding: 12px 14px;
+            min-width: 0;
+        }
+
+        .pd-sec h4 {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin: 0 0 8px;
+            font-size: .78rem;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            color: var(--sub);
+        }
+
+        .pd-sec h4 svg { width: 15px; height: 15px; color: var(--accent); }
+
+        .pd-row {
+            display: grid;
+            grid-template-columns: 42% 1fr;
+            gap: 10px;
+            padding: 5px 0;
+            border-top: 1px solid var(--border);
+            font-size: .85rem;
+        }
+
+        .pd-row:first-of-type { border-top: 0; }
+        .pd-row span:first-child { color: var(--sub); }
+        .pd-row span:last-child { overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+
+        .pd-cores {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 4px;
+            margin: 8px 0 2px;
+        }
+
+        .pd-core {
+            height: 34px;
+            border-radius: 3px;
+            background: var(--track);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pd-core div {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--accent);
+            transition: height .4s;
+        }
+
+        .pd-core-lbl {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 4px;
+            font-size: .66rem;
+            color: var(--sub);
+            text-align: center;
+        }
+
+        body.pd-lock { overflow: hidden; }
+
+        @media (max-width: 720px) {
+            .pd-body { grid-template-columns: 1fr; }
+            .pd-photo { border-right: 0; border-bottom: 1px solid var(--border); padding: 22px 16px; }
+            .pd-photo img { max-width: 220px; }
+            .pd-specs { padding: 16px; grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 
@@ -895,7 +1090,7 @@
     <div class="wrap">
         <header>
             <div class="brand">
-                <div class="icon"><img src="assets/redmi-6-pro.png" alt="" width="56" height="56"></div>
+                <button class="icon" type="button" id="phone-open" title="Show phone details" aria-haspopup="dialog"><img src="assets/redmi-6-pro.png" alt="Phone details" width="56" height="56"></button>
                 <div>
                     <h1>ae-mini-server</h1>
                     <div class="device" id="device">Connecting…</div>
@@ -1061,10 +1256,27 @@
         <footer>Self-hosted on an old phone · refreshes automatically</footer>
     </div>
 
-    <script src="assets/dashboard.bundle.js?v=23f0d5f4b6"></script>
+    <dialog class="phone-dialog" id="phone-dialog" aria-labelledby="pd-title">
+        <button class="pd-close" type="button" id="pd-close" title="Close" aria-label="Close"><i data-lucide="x"></i></button>
+        <div class="pd-body">
+            <div class="pd-photo">
+                <img src="assets/redmi-6-pro.png" alt="Redmi 6 Pro" width="800" height="800">
+                <div class="pd-name">
+                    <div class="pd-maker" id="pd-maker">–</div>
+                    <h3 id="pd-title">Phone</h3>
+                    <div class="small" id="pd-sub"></div>
+                </div>
+                <div class="pd-chips" id="pd-chips"></div>
+            </div>
+            <div class="pd-specs" id="pd-specs"><div class="small">Loading…</div></div>
+        </div>
+    </dialog>
+
+    <script src="assets/dashboard.bundle.js?v=d19a2e80fa"></script>
     <script>
         const $ = (id) => document.getElementById(id);
         let lastStatsOk = 0;
+        let lastStats = null;
 
         // Friendly name + Lucide icon for each service (unknown services get a generic box icon).
         const SERVICES = {
@@ -1146,6 +1358,7 @@
             try {
                 const s = await api("/api/stats");
                 lastStatsOk = Date.now();
+                lastStats = s;
                 const d = s.device || {};
                 $("device").textContent = [d.model, d.android && "Android " + d.android, d.miui && "MIUI " + d.miui]
                     .filter(Boolean).join(" · ");
@@ -1556,6 +1769,132 @@
             // If the chart bundle failed to load, keep the rest of the dashboard working.
             window.dashboardChart?.update(points, trades, fastN, slowN, trips);
         }
+
+        // Phone details dialog: click the header photo. Specs come from /api/device (read once on the phone);
+        // live numbers (RAM, storage, battery, uptime) reuse the latest /api/stats reading.
+        let deviceTimer = null;
+        function pdSection(iconName, title, rows, extra) {
+            const sec = el("section", { class: "pd-sec" });
+            const h = el("h4");
+            h.append(icon(iconName), document.createTextNode(title));
+            sec.append(h);
+            if (extra) sec.append(extra);
+            for (const [k, v] of rows) {
+                if (v == null || v === "") continue;
+                const row = el("div", { class: "pd-row" });
+                row.append(el("span", {}, k), el("span", {}, String(v)));
+                sec.append(row);
+            }
+            return sec;
+        }
+        function pdCores(cpu, now) {
+            const wrap = el("div");
+            const max = Math.max(...cpu.clusters.map((c) => c.max_mhz || 0)) || 1;
+            const bars = el("div", { class: "pd-cores", title: "Current speed of each core" });
+            const lbls = el("div", { class: "pd-core-lbl" });
+            const cols = `repeat(${(now || []).length || 1}, 1fr)`;
+            bars.style.gridTemplateColumns = lbls.style.gridTemplateColumns = cols;
+            (now || []).forEach((mhz, i) => {
+                const b = el("div", { class: "pd-core", title: `Core ${i}: ${mhz ?? "?"} MHz` });
+                const fill = el("div");
+                fill.style.height = Math.min(100, (mhz || 0) / max * 100) + "%";
+                b.append(fill);
+                bars.append(b);
+                lbls.append(el("span", {}, mhz != null ? (mhz / 1000).toFixed(1) : "–"));
+            });
+            wrap.append(bars, lbls);
+            return wrap;
+        }
+        function renderDevice(d) {
+            const s = lastStats || {};
+            const ghz = (m) => m != null ? (m / 1000).toFixed(2) + " GHz" : "";
+            $("pd-maker").textContent = d.manufacturer || "";
+            $("pd-title").textContent = d.model || "Phone";
+            $("pd-sub").textContent = d.codename ? `Codename ${d.codename}` : "";
+            const chips = $("pd-chips");
+            chips.replaceChildren(...[d.soc.name, d.memory.ram_total && fmtBytes(d.memory.ram_total) + " RAM",
+                d.os.android && "Android " + d.os.android, d.os.miui && "MIUI " + d.os.miui]
+                .filter(Boolean).map((t) => el("span", { class: "pd-chip" }, t)));
+
+            const cpu = d.cpu;
+            const clusters = cpu.clusters.map((c) => `${c.count} × ${ghz(c.min_mhz)}–${ghz(c.max_mhz)}`).join(" + ");
+            const m = s.memory || {}, k = s.disk || {}, b = s.battery || {};
+            const sec = d.security || {};
+            const specs = [
+                pdSection("cpu", "Chip & CPU", [
+                    ["Chip", [d.soc.name, d.soc.platform && `(${d.soc.platform})`].filter(Boolean).join(" ")],
+                    ["Made on", d.soc.process],
+                    ["CPU", `${cpu.cores} cores · ${cpu.type}`],
+                    ["Speed range", clusters],
+                    ["Governor", cpu.governor],
+                    ["Instruction sets", cpu.abi.replaceAll(",", ", ")],
+                    ["CPU features", cpu.features],
+                ], pdCores(cpu, d.cpu_now_mhz)),
+                pdSection("layers", "Graphics & screen", [
+                    ["GPU", d.soc.gpu],
+                    ["OpenGL ES", d.soc.opengl_es],
+                    ["Screen", d.published?.Screen],
+                    ["Pixel density", d.display?.density_dpi && d.display.density_dpi + " dpi setting"],
+                ]),
+                pdSection("memory-stick", "Memory & storage", [
+                    ["RAM", fmtBytes(d.memory.ram_total)],
+                    ["RAM in use", m.total ? `${fmtBytes(m.total - m.available)} (${Math.round((m.total - m.available) / m.total * 100)}%)` : ""],
+                    ["Swap", m.swap_total ? `${fmtBytes(m.swap_total - m.swap_free)} / ${fmtBytes(m.swap_total)}` : ""],
+                    ["Storage (Termux)", k.total ? `${fmtBytes(k.total - k.free)} / ${fmtBytes(k.total)}` : ""],
+                    ["Free storage", k.free ? fmtBytes(k.free) : ""],
+                ]),
+                pdSection("smartphone", "Software", [
+                    ["Android", d.os.android && `${d.os.android} (API ${d.os.sdk})`],
+                    ["MIUI", [d.os.miui, d.os.build].filter(Boolean).join(" · ")],
+                    ["Security patch", d.os.security_patch],
+                    ["Built", d.os.build_date],
+                    ["Linux kernel", d.os.kernel && `${d.os.kernel} (${d.os.arch})`],
+                    ["Modem firmware", d.os.baseband],
+                    ["Termux", d.os.termux],
+                    ["Uptime", s.uptime_s != null ? fmtDuration(s.uptime_s) : ""],
+                ]),
+                pdSection("shield-check", "Security", [
+                    ["Bootloader", sec.bootloader_locked ? "Locked" : "Unlocked"],
+                    ["Verified boot", sec.verified_boot && sec.verified_boot + (sec.verified_boot === "green" ? " (stock, untouched)" : "")],
+                    ["Storage encryption", sec.encryption],
+                    ["Root", sec.bootloader_locked ? "Not rooted (needs an unlocked bootloader)" : ""],
+                ]),
+                pdSection("battery", "Battery", [
+                    ["Design", d.published?.["Battery (design)"]],
+                    ["Now", b.percentage != null ? `${b.percentage}% · ${String(b.status || "").toLowerCase()}` : ""],
+                    ["Health", b.health],
+                    ["Estimated capacity", b.est_full_mah ? `${Math.round(b.est_full_mah).toLocaleString()} mAh (~${Math.round(b.est_capacity_pct)}%)` : ""],
+                    ["Voltage", b.voltage_mv ? (b.voltage_mv / 1000).toFixed(2) + " V" : ""],
+                ]),
+            ];
+            const pub = Object.entries(d.published || {}).filter(([key]) => key !== "Screen" && key !== "Battery (design)");
+            if (pub.length) specs.push(pdSection("camera", "Hardware (from the spec sheet)", pub));
+            $("pd-specs").replaceChildren(...specs);
+        }
+        async function refreshDevice() {
+            try {
+                renderDevice(await api("/api/device"));
+            } catch (e) {
+                if (!$("pd-specs").querySelector(".pd-sec")) {
+                    $("pd-specs").replaceChildren(el("div", { class: "small bad-text" }, "Couldn't load the phone details. Is the API updated?"));
+                }
+            }
+        }
+        function openPhone() {
+            const dlg = $("phone-dialog");
+            if (dlg.open) return;
+            dlg.showModal();
+            document.body.classList.add("pd-lock");
+            refreshDevice();
+            deviceTimer = setInterval(refreshDevice, 3000);  // live core speeds while it's open
+        }
+        $("phone-open").addEventListener("click", openPhone);
+        $("pd-close").addEventListener("click", () => $("phone-dialog").close());
+        $("phone-dialog").addEventListener("click", (e) => { if (e.target === e.currentTarget) e.currentTarget.close(); });
+        $("phone-dialog").addEventListener("close", () => {
+            clearInterval(deviceTimer);
+            document.body.classList.remove("pd-lock");
+        });
 
         window.dashboardChart?.init();
         refreshStats();
