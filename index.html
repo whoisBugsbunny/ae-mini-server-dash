@@ -1287,6 +1287,7 @@
 
         .temp-chips {
             display: flex;
+            flex-wrap: wrap;  /* narrow phone cards: Board drops under Battery instead of being cut off */
             gap: 6px;
             margin-top: 8px;
         }
@@ -1320,6 +1321,243 @@
 
         .temp-chip.hot b {
             color: var(--bad);
+        }
+
+        @media (max-width: 640px) {
+            .temp-chips {
+                gap: 4px;
+            }
+
+            .temp-chip {
+                gap: 4px;
+                padding: 1px 6px;
+                font-size: .72rem;
+            }
+        }
+
+        /* Wi-Fi badge on the QR card: in the top-right corner, out of the flow so it takes no space. */
+        .grid .qr-card {
+            position: relative;
+        }
+
+        .qr-alert {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+        }
+
+        /* Yellow = worth a look but not an attack sign (e.g. a new access point under a known name). */
+        .card-alert.warn {
+            color: var(--yellow);
+            background: color-mix(in srgb, var(--yellow) 14%, transparent);
+        }
+
+        /* Server cards that open the detail dialog */
+        .card.clickable {
+            cursor: pointer;
+            transition: border-color .15s, transform .15s;
+        }
+
+        .card.clickable:hover,
+        .card.clickable:focus-visible {
+            border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+            outline: none;
+        }
+
+        .card.clickable:active {
+            transform: scale(.99);
+        }
+
+        /* Server detail dialog: graph of one reading over time */
+        .phone-dialog.metric-dialog {
+            width: min(880px, calc(100vw - 32px));
+        }
+
+        .md-body {
+            max-height: var(--pd-h);
+            padding: 18px 22px 20px;
+        }
+
+        .md-tabs {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            margin-right: 46px;  /* room for the close button */
+            padding-bottom: 2px;
+        }
+
+        .md-tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        .md-tabs button,
+        .md-ranges button {
+            font: inherit;
+            color: var(--sub);
+            background: var(--inset);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .md-tabs button {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 11px;
+            border-radius: 999px;
+            font-size: .8rem;
+        }
+
+        .md-tabs button svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .md-tabs button b {
+            color: var(--text);
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .md-tabs button b:empty {
+            display: none;
+        }
+
+        .md-tabs button[aria-selected="true"] {
+            color: var(--bg);
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .md-tabs button[aria-selected="true"] b {
+            color: var(--bg);
+        }
+
+        .md-head {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 12px;
+            margin: 18px 0 8px;
+        }
+
+        .md-head .label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin: 0;
+        }
+
+        .md-now {
+            font: 600 2rem/1.15 Georgia, "Times New Roman", serif;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .md-ranges {
+            display: inline-flex;
+            border-radius: 7px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .md-ranges button {
+            border: 0;
+            border-left: 1px solid var(--border);
+            padding: 5px 11px;
+            font-size: .78rem;
+        }
+
+        .md-ranges button:first-child {
+            border-left: 0;
+        }
+
+        .md-ranges button[aria-pressed="true"] {
+            color: var(--text);
+            background: var(--track);
+        }
+
+        .md-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px 14px;
+            color: var(--sub);
+            font-size: .74rem;
+        }
+
+        .md-legend span {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .md-legend i {
+            width: 14px;
+            height: 3px;
+            border-radius: 2px;
+        }
+
+        .md-legend i.dashed {
+            height: 0;
+            border-top: 2px dashed;
+            background: none !important;
+        }
+
+        .md-chart {
+            height: 280px;
+            margin-top: 6px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--inset);
+        }
+
+        .md-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .md-stat {
+            padding: 9px 11px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            background: var(--inset);
+            min-width: 0;
+        }
+
+        .md-stat b {
+            display: block;
+            font-size: 1rem;
+            font-weight: 650;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .md-note {
+            margin-top: 10px;
+        }
+
+        @media (max-width: 640px) {
+            .md-body {
+                padding: 14px 14px 16px;
+            }
+
+            .md-now {
+                font-size: 1.6rem;
+            }
+
+            .md-chart {
+                height: 230px;
+            }
+
+            .md-stats {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
         }
 
         /* Owner profile button + links menu (top right) */
@@ -1743,7 +1981,7 @@
                 <div class="value" id="uptime">–</div>
                 <div class="small" id="procs"></div>
             </div>
-            <div class="card" title="Load = how many tasks were running or waiting to run, averaged over 1, 5 and 15 minutes. With 8 cores, 8.0 would mean every core busy. On Android it also counts tasks waiting on storage, so it can sit around 4 even when the cores are idle. Tap the phone photo to see real core speeds.">
+            <div class="card clickable" id="cpu-card" data-metric="cpu" role="button" tabindex="0" aria-haspopup="dialog" title="Tap for the CPU graph. Load = how many tasks were running or waiting to run, averaged over 1, 5 and 15 minutes. With 8 cores, 8.0 would mean every core busy. On Android it also counts tasks waiting on storage, so it can sit around 4 even when the cores are idle. Tap the phone photo to see each core's speed.">
                 <div class="label"><i data-lucide="cpu"></i>CPU load (1 min)</div>
                 <div class="value" id="load1">–</div>
                 <div class="bar" id="load-bar">
@@ -1751,7 +1989,7 @@
                 </div>
                 <div class="small" id="load-more"></div>
             </div>
-            <div class="card">
+            <div class="card clickable" id="mem-card" data-metric="mem" role="button" tabindex="0" aria-haspopup="dialog" title="Tap for the memory graph">
                 <div class="label"><i data-lucide="memory-stick"></i>Memory</div>
                 <div class="value" id="mem">–</div>
                 <div class="bar" id="mem-bar">
@@ -1759,7 +1997,7 @@
                 </div>
                 <div class="small" id="swap"></div>
             </div>
-            <div class="card">
+            <div class="card clickable" id="disk-card" data-metric="disk" role="button" tabindex="0" aria-haspopup="dialog" title="Tap for the storage graph">
                 <div class="label"><i data-lucide="hard-drive"></i>Storage</div>
                 <div class="value" id="disk">–</div>
                 <div class="bar" id="disk-bar">
@@ -1767,7 +2005,7 @@
                 </div>
                 <div class="small" id="disk-free"></div>
             </div>
-            <div class="card temp-card">
+            <div class="card temp-card clickable" id="temp-card" data-metric="temp" role="button" tabindex="0" aria-haspopup="dialog" title="Tap for the temperature graph">
                 <div class="label"><i data-lucide="thermometer"></i>Temperature<span class="temp-span" id="temp-span" hidden></span></div>
                 <div class="value"><span id="temp-cpu">–</span><span class="temp-tag">CPU</span></div>
                 <div class="temp-range" id="temp-range" hidden>
@@ -1779,7 +2017,7 @@
                     <span class="temp-chip" id="temp-board" title="Board (crystal) temperature"><i data-lucide="cpu"></i>Board<b>–</b></span>
                 </div>
             </div>
-            <div class="card" id="battery-card">
+            <div class="card clickable" id="battery-card" data-metric="bat" role="button" tabindex="0" aria-haspopup="dialog" title="Tap for the battery graph">
                 <div class="label"><i data-lucide="battery" id="battery-icon"></i>Battery<span class="card-alert" id="bat-alert" hidden></span></div>
                 <div class="value" id="bat-pct">–</div>
                 <div class="bar" id="bat-bar">
@@ -1789,9 +2027,9 @@
                 <div class="small" id="bat-health"></div>
             </div>
             <div class="card qr-card">
+                <span class="card-alert qr-alert" id="wifi-alert" hidden></span>
                 <div class="qr" id="qr" role="img" aria-label="QR code for the dashboard address"></div>
                 <div class="qr-info">
-                    <div class="label"><span class="card-alert" id="wifi-alert" hidden></span></div>
                     <div class="small" id="wifi-line">Wi-Fi: –</div>
                     <div class="small" id="wifi-ap"></div>
                     <div class="value" id="qr-url">–</div>
@@ -1935,6 +2173,37 @@
         <footer>Self-hosted on an old phone · refreshes automatically</footer>
     </div>
 
+    <dialog class="phone-dialog metric-dialog" id="metric-dialog" aria-labelledby="md-title">
+        <button class="pd-close" type="button" id="md-close" title="Close" aria-label="Close"><i data-lucide="x"></i></button>
+        <div class="md-body pd-scroll">
+            <div class="md-tabs" id="md-tabs" role="tablist" aria-label="Server reading">
+                <button type="button" role="tab" data-metric="cpu"><i data-lucide="cpu"></i><span>CPU</span><b></b></button>
+                <button type="button" role="tab" data-metric="mem"><i data-lucide="memory-stick"></i><span>Memory</span><b></b></button>
+                <button type="button" role="tab" data-metric="disk"><i data-lucide="hard-drive"></i><span>Storage</span><b></b></button>
+                <button type="button" role="tab" data-metric="temp"><i data-lucide="thermometer"></i><span>Temperature</span><b></b></button>
+                <button type="button" role="tab" data-metric="bat"><i data-lucide="battery"></i><span>Battery</span><b></b></button>
+            </div>
+            <div class="md-head">
+                <div>
+                    <div class="label" id="md-title">–</div>
+                    <div class="md-now" id="md-now">–</div>
+                    <div class="small" id="md-sub"></div>
+                </div>
+                <div class="md-ranges" id="md-ranges" role="group" aria-label="Time range">
+                    <button type="button" data-range="live" title="Every 5 seconds since you opened the page">Live</button>
+                    <button type="button" data-range="1h">1h</button>
+                    <button type="button" data-range="6h">6h</button>
+                    <button type="button" data-range="24h">24h</button>
+                    <button type="button" data-range="7d">7d</button>
+                </div>
+            </div>
+            <div class="md-legend" id="md-legend"></div>
+            <div class="md-chart" id="md-chart"></div>
+            <div class="md-stats" id="md-stats"></div>
+            <div class="small md-note" id="md-note"></div>
+        </div>
+    </dialog>
+
     <dialog class="phone-dialog time-dialog" id="time-dialog" aria-labelledby="td-title">
         <button class="pd-close" type="button" id="td-close" title="Close" aria-label="Close"><i data-lucide="x"></i></button>
         <div class="td-body pd-scroll">
@@ -1966,7 +2235,7 @@
         </div>
     </dialog>
 
-    <script src="assets/dashboard.bundle.js?v=7bc5d303cd"></script>
+    <script src="assets/dashboard.bundle.js?v=658dae35c0"></script>
     <script>
         const $ = (id) => document.getElementById(id);
         let lastStatsOk = 0;
@@ -2092,6 +2361,7 @@
                 const s = await api("/api/stats");
                 lastStatsOk = Date.now();
                 lastStats = s;
+                pushLive(s);
                 const d = s.device || {};
                 $("device")
                     .textContent = [d.model, d.android && "Android " + d.android, d.miui && "MIUI " + d.miui]
@@ -2147,6 +2417,7 @@
                 renderBattery(s.battery);
 
                 renderServices(s.services || []);
+                if ($("metric-dialog").open) renderMetricDialog();
             } catch (e) {
                 // status pill shows the problem; keep the last good numbers on screen
             }
@@ -2316,10 +2587,13 @@
 
             const lookalikes = w.same_name_nearby || [];
             const problems = [];
-            if (w.new_access_point) problems.push("New access point");
             if (lookalikes.length) problems.push(`${lookalikes.length} look-alike${lookalikes.length > 1 ? "s" : ""} nearby`);
+            if (w.new_access_point) problems.push("New access point");
+            // Look-alikes nearby = possible clone (red). Only a new access point under a known name = yellow.
+            const severe = lookalikes.length > 0;
             if (problems.length) {
                 alert.hidden = false;
+                alert.className = "card-alert qr-alert" + (severe ? "" : " warn");
                 alert.replaceChildren(icon("triangle-alert"), document.createTextNode(problems[0]));
                 alert.title = [
                         w.new_access_point && `Connected to an access point first seen ${shortDate(w.bssid_first_seen)}; ` +
@@ -2337,7 +2611,7 @@
                     "The access point's hardware address (BSSID). It is unique per access point, so a different one " +
                     "under the same name means a different device. A determined attacker can copy it, so treat this " +
                     "as an early warning, not proof."));
-                ap.className = "small" + (trusted ? "" : " bad-text");
+                ap.className = "small" + (trusted ? "" : severe ? " bad-text" : " yellow-text");
             }
         }
 
@@ -2941,6 +3215,247 @@
                 clearInterval(deviceTimer);
                 document.body.classList.remove("pd-lock");
             });
+
+        // ---------- server detail dialog (tap CPU / Memory / Storage / Temperature / Battery) ----------
+        // History comes from /api/history (one reading per minute in the phone's metrics.db, 7 days kept).
+        // "Live" uses the 5-second readings this page has already fetched, so it adds no work on the phone.
+        const LIVE_MAX = 240; // 20 minutes of 5-second readings
+        const liveRows = [];
+        function pushLive(s) {
+            if (liveRows.length && liveRows[liveRows.length - 1].ts === s.time) return;
+            const m = s.memory || {}, t = s.temps || {}, k = s.disk || {};
+            const b = s.battery && !s.battery.error ? s.battery : {};
+            const v = (x) => x ?? null;
+            liveRows.push({
+                ts: s.time, load1: s.load ? s.load[0] : null, load1_max: s.load ? s.load[0] : null, cpu_speed: v(s.cpu_speed),
+                mem_used: m.total ? m.total - m.available : null, mem_total: v(m.total),
+                swap_used: m.swap_total != null && m.swap_free != null ? m.swap_total - m.swap_free : null,
+                cpu_c: v(t.cpu_c), cpu_c_max: v(t.cpu_c), battery_c: v(t.battery_c), board_c: v(t.board_c),
+                bat_pct: v(b.percentage), bat_ma: v(b.current_ma), bat_mv: v(b.voltage_mv),
+                bat_charging: b.status ? (b.status === "CHARGING" || b.status === "FULL" ? 1 : 0) : null,
+                disk_used: k.total ? k.total - k.free : null, disk_total: v(k.total),
+            });
+            if (liveRows.length > LIVE_MAX) liveRows.shift();
+        }
+
+        function rangeStats(rows, key) {
+            const vals = rows.map((r) => r[key]).filter((x) => x != null && Number.isFinite(x));
+            if (!vals.length) return null;
+            return { low: Math.min(...vals), high: Math.max(...vals), avg: vals.reduce((a, b) => a + b, 0) / vals.length,
+                first: vals[0], last: vals[vals.length - 1] };
+        }
+        const num = (v, d = 1) => v == null ? "–" : Number(v).toFixed(d);
+        const degC = (v) => v == null ? "–" : `${Number(v).toFixed(1)} °C`;
+        const pctTxt = (v) => v == null ? "–" : `${Math.round(v)}%`;
+        const coresOf = () => (lastStats && lastStats.cpu_count) || 8;
+
+        // Each reading: what the big number says, which lines to draw, and the small tiles under the chart.
+        const METRIC_DEFS = {
+            cpu: {
+                title: "CPU", icon: "cpu",
+                tab: (r) => r.load1 != null ? num(r.load1, 2) : "",
+                now: (r) => r.load1 != null ? `${num(r.load1, 2)} load` : "–",
+                sub: (r) => [r.cpu_speed != null && `cores at ${Math.round(r.cpu_speed)}% of top speed`, `${coresOf()} cores`].filter(Boolean).join(" · "),
+                series: [
+                    { key: "load1", name: "Load (1 min)", color: "--accent", area: true },
+                    { key: "cpu_speed", name: "Core speed (% of max)", color: "--slow", axis: 1, dashed: true },
+                ],
+                axes: () => [
+                    { min: 0, max: (e) => Math.max(coresOf(), Math.ceil(e.max)), format: (v) => String(+Number(v).toFixed(2)) },
+                    { min: 0, max: 100, format: (v) => `${Math.round(v)}%` },
+                ],
+                marks: () => [{ y: coresOf(), label: "all cores busy", color: "--bad" }],
+                stats: (rows) => {
+                    const l = rangeStats(rows, "load1"), p = rangeStats(rows, "load1_max"), c = rangeStats(rows, "cpu_speed");
+                    return [["Lowest load", num(l?.low, 2)], ["Average load", num(l?.avg, 2)], ["Highest load", num(p?.high ?? l?.high, 2)],
+                        ["Avg core speed", pctTxt(c?.avg)], ["Top core speed", pctTxt(c?.high)]];
+                },
+                note: "Android hides real CPU usage from apps. Load counts tasks running or waiting (including waiting on storage, " +
+                    "so about 4 can be normal here); core speed shows how hard the cores are pushed, because they only speed up when there is work.",
+            },
+            mem: {
+                title: "Memory", icon: "memory-stick",
+                tab: (r) => r.mem_total ? pctTxt(r.mem_used / r.mem_total * 100) : "",
+                now: (r) => r.mem_total ? `${fmtBytes(r.mem_used)} / ${fmtBytes(r.mem_total)}` : "–",
+                sub: (r) => r.mem_total ? `${pctTxt(r.mem_used / r.mem_total * 100)} used · ${fmtBytes(r.mem_total - r.mem_used)} free` : "",
+                series: [
+                    { key: "mem_used", name: "RAM used", color: "--accent", area: true },
+                    { key: "swap_used", name: "Swap used", color: "--warn", dashed: true },
+                ],
+                axes: (rows, r) => [{ min: 0, max: r.mem_total || undefined, format: (v) => fmtBytes(v) }],
+                stats: (rows, r) => {
+                    const u = rangeStats(rows, "mem_used"), w = rangeStats(rows, "swap_used");
+                    return [["Lowest", u ? fmtBytes(u.low) : "–"], ["Average", u ? fmtBytes(u.avg) : "–"], ["Highest", u ? fmtBytes(u.high) : "–"],
+                        ["Swap now", r.swap_used != null ? fmtBytes(r.swap_used) : "–"], ["Swap highest", w ? fmtBytes(w.high) : "–"]];
+                },
+                note: "Android keeps RAM about 70–75% full on purpose and frees it when an app needs more, so a high line is normal. " +
+                    "Watch for swap climbing: that means memory is really short.",
+            },
+            disk: {
+                title: "Storage", icon: "hard-drive",
+                tab: (r) => r.disk_total ? pctTxt(r.disk_used / r.disk_total * 100) : "",
+                now: (r) => r.disk_total ? `${fmtBytes(r.disk_used)} / ${fmtBytes(r.disk_total)}` : "–",
+                sub: (r) => r.disk_total ? `${fmtBytes(r.disk_total - r.disk_used)} free` : "",
+                series: [{ key: "disk_used", name: "Used", color: "--accent", area: true }],
+                axes: () => [{ format: (v) => fmtBytes(v) }],
+                stats: (rows) => {
+                    const d = rangeStats(rows, "disk_used");
+                    const grow = d ? d.last - d.first : null;
+                    return [["Start of range", d ? fmtBytes(d.first) : "–"], ["Now", d ? fmtBytes(d.last) : "–"],
+                        ["Change", grow == null ? "–" : `${grow >= 0 ? "+" : "−"}${fmtBytes(Math.abs(grow))}`]];
+                },
+                note: "The phone storage Termux uses. Bot prices, candles and logs grow it slowly; old readings are trimmed automatically.",
+            },
+            temp: {
+                title: "Temperature", icon: "thermometer",
+                tab: (r) => r.cpu_c != null ? `${num(r.cpu_c, 0)}°` : "",
+                now: (r) => r.cpu_c != null ? `${num(r.cpu_c)} °C` : "–",
+                sub: (r) => `CPU · battery ${degC(r.battery_c)} · board ${degC(r.board_c)}`,
+                series: [
+                    { key: "cpu_c", name: "CPU", color: "--accent", area: true },
+                    { key: "battery_c", name: "Battery", color: "--warn" },
+                    { key: "board_c", name: "Board", color: "--slow", dashed: true },
+                ],
+                axes: () => [{ format: (v) => `${Math.round(v)}°` }],
+                marks: () => [{ y: 70, label: "70° slows down", color: "--bad" }],
+                stats: (rows) => {
+                    const c = rangeStats(rows, "cpu_c"), p = rangeStats(rows, "cpu_c_max"), b = rangeStats(rows, "battery_c"), o = rangeStats(rows, "board_c");
+                    return [["CPU lowest", degC(c?.low)], ["CPU average", degC(c?.avg)], ["CPU highest", degC(p?.high ?? c?.high)],
+                        ["Battery highest", degC(b?.high)], ["Board average", degC(o?.avg)]];
+                },
+                note: "Phone CPUs slow themselves down around 70–80 °C. Keep the battery under about 45 °C to avoid swelling.",
+            },
+            bat: {
+                title: "Battery", icon: "battery",
+                tab: (r) => r.bat_pct != null ? pctTxt(r.bat_pct) : "",
+                now: (r) => r.bat_pct != null ? pctTxt(r.bat_pct) : "–",
+                sub: (r) => [r.bat_charging == null ? null : r.bat_charging ? "charging" : "on battery",
+                    r.bat_ma != null && `${Math.round(r.bat_ma)} mA`, r.bat_mv != null && `${(r.bat_mv / 1000).toFixed(2)} V`].filter(Boolean).join(" · "),
+                series: [
+                    { key: "bat_pct", name: "Charge", color: "--accent", area: true },
+                    { key: "bat_ma", name: "Current (mA)", color: "--slow", axis: 1, dashed: true },
+                ],
+                axes: () => [{ min: 0, max: 100, format: (v) => `${Math.round(v)}%` }, { min: 0, format: (v) => `${Math.round(v)}` }],
+                stats: (rows) => {
+                    const p = rangeStats(rows, "bat_pct"), a = rangeStats(rows, "bat_ma"), v = rangeStats(rows, "bat_mv");
+                    return [["Lowest", pctTxt(p?.low)], ["Highest", pctTxt(p?.high)], ["Avg current", a ? `${Math.round(a.avg)} mA` : "–"],
+                        ["Voltage", v ? `${(v.last / 1000).toFixed(2)} V` : "–"]];
+                },
+                note: "A server phone should stay on the charger. A flat line near 100% is good; drops mean it was unplugged or the charger can't keep up.",
+            },
+        };
+
+        let mdMetric = "cpu", mdTimer = null, mdError = "";
+        let mdRange = (() => { try { return localStorage.getItem("ae-md-range") || "1h"; } catch (e) { return "1h"; } })();
+        const mdHistory = {}; // range -> { rows, bucket }
+
+        async function loadMetricHistory() {
+            if (mdRange === "live") { mdError = ""; return renderMetricDialog(); }
+            const range = mdRange;
+            try {
+                const h = await api(`/api/history?range=${range}`);
+                mdHistory[range] = { bucket: h.bucket_s, rows: h.rows.map((r) => Object.fromEntries(h.fields.map((f, i) => [f, r[i]]))) };
+                mdError = "";
+            } catch (e) {
+                mdError = "Couldn't load the history. Is the API updated?";
+            }
+            if (range === mdRange) renderMetricDialog();
+        }
+
+        function metricRows() {
+            if (mdRange === "live") return { rows: liveRows, bucket: 5 };
+            const h = mdHistory[mdRange] || { rows: [], bucket: 60 };
+            const rows = h.rows.slice();
+            const last = liveRows[liveRows.length - 1];
+            if (last && (!rows.length || last.ts > rows[rows.length - 1].ts)) rows.push(last); // end on the latest reading
+            return { rows, bucket: h.bucket };
+        }
+
+        function renderMetricDialog() {
+            const def = METRIC_DEFS[mdMetric];
+            const { rows, bucket } = metricRows();
+            const latest = liveRows[liveRows.length - 1] || rows[rows.length - 1] || {};
+            for (const tab of $("md-tabs").children) {
+                const d = METRIC_DEFS[tab.dataset.metric];
+                tab.setAttribute("aria-selected", String(tab.dataset.metric === mdMetric));
+                tab.querySelector("b").textContent = d.tab(latest);
+                // phones: the tab row scrolls sideways, so keep the chosen one visible (without moving the page)
+                if (tab.dataset.metric === mdMetric && tab.parentElement.scrollWidth > tab.parentElement.clientWidth) {
+                    tab.parentElement.scrollLeft = tab.offsetLeft - tab.parentElement.offsetLeft - 8;
+                }
+            }
+            for (const b of $("md-ranges").children) b.setAttribute("aria-pressed", String(b.dataset.range === mdRange));
+            $("md-title").replaceChildren(icon(def.icon), document.createTextNode(def.title));
+            $("md-now").textContent = def.now(latest);
+            $("md-sub").textContent = def.sub(latest);
+            $("md-legend").replaceChildren(...def.series.map((s) => {
+                const sw = el("i", { class: s.dashed ? "dashed" : "" });
+                sw.style.background = sw.style.borderColor = `var(${s.color})`;
+                const item = el("span");
+                item.append(sw, document.createTextNode(s.name));
+                return item;
+            }));
+            // A gap in the readings (API restarted, phone off) becomes a break in the line, not a straight join.
+            const data = (key) => {
+                const out = [];
+                rows.forEach((r, i) => {
+                    if (i && r.ts - rows[i - 1].ts > Math.max(bucket * 3, 30)) out.push([(rows[i - 1].ts + 1) * 1000, null]);
+                    out.push([r.ts * 1000, r[key]]);
+                });
+                return out;
+            };
+            window.dashboardChart?.updateMetric({
+                series: def.series.map((s) => ({ ...s, data: data(s.key) })),
+                axes: def.axes(rows, latest),
+                marks: def.marks ? def.marks() : [],
+                empty: mdError || (mdRange === "live" ? "Collecting live readings…" : "No readings yet for this range"),
+            });
+            $("md-stats").replaceChildren(...def.stats(rows, latest).map(([label, value]) => {
+                const tile = el("div", { class: "md-stat" });
+                tile.append(el("div", { class: "small" }, label), el("b", {}, value));
+                return tile;
+            }));
+            const span = mdRange === "live" ? "Every 5 s while this page is open." :
+                `One point per ${bucket >= 120 ? Math.round(bucket / 60) + " min (averaged)" : "minute"}.`;
+            $("md-note").textContent = mdError || `${span} ${def.note}`;
+            $("md-note").classList.toggle("bad-text", !!mdError);
+        }
+
+        function openMetric(name) {
+            mdMetric = METRIC_DEFS[name] ? name : "cpu";
+            const dlg = $("metric-dialog");
+            if (!dlg.open) {
+                dlg.showModal();
+                document.body.classList.add("pd-lock");
+                mdTimer = setInterval(loadMetricHistory, 60000); // a new history point arrives once a minute
+            }
+            renderMetricDialog();
+            loadMetricHistory();
+        }
+        for (const card of document.querySelectorAll(".card[data-metric]")) {
+            card.addEventListener("click", () => openMetric(card.dataset.metric));
+            card.addEventListener("keydown", (e) => {
+                if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openMetric(card.dataset.metric); }
+            });
+        }
+        $("md-tabs").addEventListener("click", (e) => {
+            const tab = e.target.closest("button");
+            if (tab) { mdMetric = tab.dataset.metric; renderMetricDialog(); }
+        });
+        $("md-ranges").addEventListener("click", (e) => {
+            const b = e.target.closest("button");
+            if (!b || b.dataset.range === mdRange) return;
+            mdRange = b.dataset.range;
+            try { localStorage.setItem("ae-md-range", mdRange); } catch (err) { /* storage blocked */ }
+            renderMetricDialog();
+            loadMetricHistory();
+        });
+        $("md-close").addEventListener("click", () => $("metric-dialog").close());
+        $("metric-dialog").addEventListener("click", (e) => { if (e.target === e.currentTarget) e.currentTarget.close(); });
+        $("metric-dialog").addEventListener("close", () => {
+            clearInterval(mdTimer);
+            document.body.classList.remove("pd-lock");
+        });
 
         // World time dialog: tap the date/time badge. Uses the phone's clock (offset from the last /api/stats).
         const WORLD_CLOCKS = [

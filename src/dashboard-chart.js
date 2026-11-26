@@ -593,4 +593,93 @@ function updateEquity(points, start, hideCash) {
     }, { notMerge: true });
 }
 
-window.dashboardChart = { init, update, updateMarket, updateEquity };
+// Server detail dialogs (CPU, memory, storage, temperature, battery): one time chart with up to two
+// y-axes. spec = { series: [{ name, color (CSS var), data: [[ms, value]], axis (0 left / 1 right), area, dashed }],
+//                  axes: [{ min, max, format }], marks: [{ y, label, color }], empty }
+let metricChart;
+function updateMetric(spec) {
+    const element = document.getElementById("md-chart");
+    if (!element) return;
+    if (!metricChart) {
+        metricChart = echarts.init(element, null, { renderer: "canvas" });
+        if ("ResizeObserver" in window) new ResizeObserver(() => metricChart.resize()).observe(element);
+        else window.addEventListener("resize", () => metricChart.resize());
+    }
+    const sub = themeColor("--sub");
+    const border = themeColor("--border");
+    const axes = spec.axes.length ? spec.axes : [{}];
+    const fmtAxis = (axis) => (v) => axis.format ? axis.format(v) : String(v);
+    const ts = spec.series.flatMap(s => s.data.length ? [s.data[0][0], s.data[s.data.length - 1][0]] : []);
+    const span = ts.length ? Math.max(...ts) - Math.min(...ts) : 0;
+    const when = (ms) => new Date(ms).toLocaleString([], span > 20 * 3600e3 ?
+        { weekday: "short", day: "numeric", hour: "2-digit", minute: "2-digit" } :
+        { hour: "2-digit", minute: "2-digit", second: span < 1800e3 ? "2-digit" : undefined });
+    metricChart.setOption({
+        animation: false,
+        grid: { left: 8, right: 8, top: 16, bottom: 4, containLabel: true },
+        tooltip: {
+            trigger: "axis",
+            backgroundColor: themeColor("--card"),
+            borderColor: border,
+            textStyle: { color: themeColor("--text"), fontSize: 12 },
+            formatter(params) {
+                const items = Array.isArray(params) ? params : [params];
+                if (!items.length) return "";
+                return `<strong>${when(items[0].value[0])}</strong>` + items.filter(i => i.value[1] != null).map(i => {
+                    const axis = axes[spec.series[i.seriesIndex].axis || 0] || {};
+                    return `<div>${i.marker}${i.seriesName}: <b>${fmtAxis(axis)(i.value[1])}</b></div>`;
+                }).join("");
+            },
+        },
+        xAxis: {
+            type: "time",
+            axisLine: { lineStyle: { color: border } },
+            axisTick: { show: false },
+            axisLabel: { color: sub, fontSize: 10, hideOverlap: true },
+            splitLine: { show: false },
+        },
+        yAxis: axes.map((axis, i) => ({
+            type: "value",
+            position: i ? "right" : "left",
+            min: axis.min,
+            max: axis.max,
+            scale: axis.min == null,
+            splitNumber: 4,
+            axisLabel: { color: sub, fontSize: 10, formatter: fmtAxis(axis) },
+            splitLine: { show: i === 0, lineStyle: { color: border, type: "dashed" } },
+        })),
+        series: spec.series.map((s, i) => {
+            const color = themeColor(s.color);
+            return {
+                name: s.name,
+                type: "line",
+                yAxisIndex: s.axis || 0,
+                showSymbol: false,
+                connectNulls: false,
+                smooth: 0.2,
+                data: s.data,
+                lineStyle: { color, width: s.dashed ? 1.5 : 2, type: s.dashed ? "dashed" : "solid" },
+                itemStyle: { color },
+                areaStyle: s.area ? {
+                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                        { offset: 0, color: color + "55" }, { offset: 1, color: color + "05" }]),
+                } : undefined,
+                markLine: i === 0 && spec.marks && spec.marks.length ? {
+                    silent: true,
+                    symbol: "none",
+                    data: spec.marks.map(m => ({
+                        yAxis: m.y,
+                        lineStyle: { color: themeColor(m.color || "--sub"), type: "dotted", width: 1 },
+                        label: { color: themeColor(m.color || "--sub"), fontSize: 9, formatter: m.label, position: "insideEndTop" },
+                    })),
+                } : undefined,
+            };
+        }),
+        graphic: spec.series.some(s => s.data.some(p => p[1] != null)) ? [] : [{
+            type: "text", left: "center", top: "middle",
+            style: { text: spec.empty || "No data yet", fill: sub, fontSize: 12 },
+        }],
+    }, { notMerge: true });
+}
+
+window.dashboardChart = { init, update, updateMarket, updateEquity, updateMetric };
