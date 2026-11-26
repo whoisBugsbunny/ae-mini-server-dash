@@ -2307,8 +2307,8 @@
             <div class="md-chart" id="md-chart"></div>
             <div class="md-cores" id="md-cores" hidden></div>
             <div class="md-menu" id="md-menu" role="menu" aria-label="CPU view" hidden>
-                <button type="button" role="menuitemradio" data-view="overall" id="md-view-overall"><i data-lucide="chart-line"></i>Overall: load + average speed</button>
-                <button type="button" role="menuitemradio" data-view="cores" id="md-view-cores"><i data-lucide="cpu"></i>Each core</button>
+                <button type="button" role="menuitemradio" data-view="overall" id="md-view-overall"><i data-lucide="chart-line"></i>Overall: in use, clock, load</button>
+                <button type="button" role="menuitemradio" data-view="cores" id="md-view-cores"><i data-lucide="cpu"></i>Each core: % in use</button>
             </div>
             <div class="md-stats" id="md-stats"></div>
             <div class="small md-note" id="md-note"></div>
@@ -3338,7 +3338,7 @@
             const b = s.battery && !s.battery.error ? s.battery : {};
             const v = (x) => x ?? null;
             liveRows.push({
-                ts: s.time, load1: s.load ? s.load[0] : null, load1_max: s.load ? s.load[0] : null, cpu_speed: v(s.cpu_speed),
+                ts: s.time, load1: s.load ? s.load[0] : null, load1_max: s.load ? s.load[0] : null, cpu_speed: v(s.cpu_speed), cpu_busy: v(s.cpu_busy), cpu_busy_max: v(s.cpu_busy),
                 mem_used: m.total ? m.total - m.available : null, mem_total: v(m.total),
                 swap_used: m.swap_total != null && m.swap_free != null ? m.swap_total - m.swap_free : null,
                 cpu_c: v(t.cpu_c), cpu_c_max: v(t.cpu_c), battery_c: v(t.battery_c), board_c: v(t.board_c),
@@ -3365,25 +3365,28 @@
         const METRIC_DEFS = {
             cpu: {
                 title: "CPU", icon: "cpu",
-                tab: (r) => r.load1 != null ? num(r.load1, 2) : "",
-                now: (r) => r.load1 != null ? `${num(r.load1, 2)} load` : "–",
-                sub: (r) => [r.cpu_speed != null && `cores at ${Math.round(r.cpu_speed)}% of top speed`, `${coresOf()} cores`].filter(Boolean).join(" · "),
+                tab: (r) => r.cpu_busy != null ? pctTxt(r.cpu_busy) : r.load1 != null ? num(r.load1, 2) : "",
+                now: (r) => r.cpu_busy != null ? `${pctTxt(r.cpu_busy)} in use` : r.load1 != null ? `${num(r.load1, 2)} load` : "–",
+                sub: (r) => [r.load1 != null && `load ${num(r.load1, 2)}`, r.cpu_speed != null && `clock at ${Math.round(r.cpu_speed)}% of top speed`,
+                    `${coresOf()} cores`].filter(Boolean).join(" · "),
                 series: [
-                    { key: "load1", name: "Load (1 min)", color: "--accent", area: true },
-                    { key: "cpu_speed", name: "Core speed (% of max)", color: "--slow", axis: 1, dashed: true },
+                    { key: "cpu_busy", name: "CPU in use", color: "--accent", area: true },
+                    { key: "cpu_speed", name: "Clock speed (% of max)", color: "--slow", dashed: true },
+                    { key: "load1", name: "Load (right axis)", color: "--warn", axis: 1, dashed: true },
                 ],
                 axes: () => [
-                    { min: 0, max: (e) => Math.max(coresOf(), Math.ceil(e.max)), format: (v) => String(+Number(v).toFixed(2)) },
                     { min: 0, max: 100, format: (v) => `${Math.round(v)}%` },
+                    { min: 0, max: (e) => Math.max(coresOf(), Math.ceil(e.max)), format: (v) => String(+Number(v).toFixed(2)) },
                 ],
-                marks: () => [{ y: coresOf(), label: "all cores busy", color: "--bad" }],
                 stats: (rows) => {
-                    const l = rangeStats(rows, "load1"), p = rangeStats(rows, "load1_max"), c = rangeStats(rows, "cpu_speed");
-                    return [["Lowest load", num(l?.low, 2)], ["Average load", num(l?.avg, 2)], ["Highest load", num(p?.high ?? l?.high, 2)],
-                        ["Avg core speed", pctTxt(c?.avg)], ["Top core speed", pctTxt(c?.high)]];
+                    const b = rangeStats(rows, "cpu_busy"), bm = rangeStats(rows, "cpu_busy_max"), l = rangeStats(rows, "load1"),
+                        p = rangeStats(rows, "load1_max"), c = rangeStats(rows, "cpu_speed");
+                    return [["Average in use", pctTxt(b?.avg)], ["Highest in use", pctTxt(bm?.high ?? b?.high)], ["Average load", num(l?.avg, 2)],
+                        ["Highest load", num(p?.high ?? l?.high, 2)], ["Avg clock speed", pctTxt(c?.avg)]];
                 },
-                note: "Right-click the chart (long-press on a phone) to see each core. Android hides real CPU usage from apps. Load counts tasks running or waiting (including waiting on storage, " +
-                    "so about 4 can be normal here); core speed shows how hard the cores are pushed, because they only speed up when there is work.",
+                note: "Right-click the chart (long-press on a phone) to see each core. \"In use\" comes from how long each core was " +
+                    "NOT idle. Load also counts tasks waiting on storage, which is why it sits around 4 while the cores are mostly idle. " +
+                    "All 8 cores share one clock, so the speed line is the same for every core.",
             },
             mem: {
                 title: "Memory", icon: "memory-stick",

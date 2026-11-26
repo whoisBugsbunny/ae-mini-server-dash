@@ -682,7 +682,7 @@ function updateMetric(spec) {
     }, { notMerge: true });
 }
 
-// Per-core view of the CPU dialog: one small chart per core, 0–100% of that core's top speed.
+// Per-core view of the CPU dialog: one small chart per core, % of the time that core was busy.
 // cores = [{ data: [[ms, % or null]] }]; the cards around the charts are made by the page (#md-cores > .md-core).
 const coreCharts = [];
 function updateCores(cores) {
