@@ -571,6 +571,21 @@
             font-variant-numeric: tabular-nums;
         }
 
+        .data-src {
+            display: flex;
+            align-items: flex-start;
+            gap: 5px;
+            margin-top: 4px;
+            line-height: 1.35;
+        }
+
+        .data-src svg {
+            width: 12px;
+            height: 12px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
         .bc-meta {
             display: flex;
             flex-wrap: wrap;
@@ -2346,7 +2361,7 @@
         </div>
     </dialog>
 
-    <script src="assets/dashboard.bundle.js?v=2637f60cac"></script>
+    <script src="assets/dashboard.bundle.js?v=62a344fbd9"></script>
     <script>
         const $ = (id) => document.getElementById(id);
         let lastStatsOk = 0;
@@ -2767,8 +2782,15 @@
             const meta = el("div", { class: "meta small" });
             meta.append(el("div", {}, st.text));
             if (svc.pid) meta.append(el("div", {}, "pid " + svc.pid));
+            if (svc.data) name.append(dataLine(svc.data));
             card.append(svcTile(svc, iconName), name, meta);
             return card;
+        }
+        // "Data: Coinbase candles · Binance order book" (from the service's "# data:" line), so it's clear where prices come from.
+        function dataLine(text) {
+            const line = el("div", { class: "data-src small", title: "Where this service gets its market data (free public APIs, no account)" });
+            line.append(icon("database"), document.createTextNode(text));
+            return line;
         }
         function renderBotCard(svc) {
             const st = svcStatus(svc);
@@ -2792,6 +2814,7 @@
                     el("span", {}, `${s.qty > 0 ? (isShort(s) ? "short " : "holding ") + s.base : "in cash"} · ${s.trades} trades`));
                 card.append(res);
             }
+            if (svc.data) card.append(dataLine(svc.data));
             const meta = el("div", { class: "bc-meta small" });
             meta.append(el("span", {}, st.text + (svc.pid ? " · pid " + svc.pid : "")));
             if (svc.version) meta.append(el("span", { class: "version" }, svc.version.replace(/^Python /, "Py ")));
