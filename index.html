@@ -1513,6 +1513,104 @@
             background: var(--inset);
         }
 
+        /* Per-core view: one small chart per core */
+        .md-cores {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        .md-cores[hidden],
+        .md-legend[hidden],
+        .md-chart[hidden] {
+            display: none;
+        }
+
+        .md-core {
+            padding: 8px 10px 6px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--inset);
+            min-width: 0;
+        }
+
+        .md-core-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 6px;
+            font-size: .74rem;
+            color: var(--sub);
+        }
+
+        .md-core-head b {
+            color: var(--text);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .md-core-chart {
+            height: 70px;
+            margin-top: 4px;
+        }
+
+        .md-core-avg {
+            font-size: .7rem;
+            color: var(--sub);
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Right-click (long-press) menu on the CPU chart */
+        .md-menu {
+            position: absolute;
+            z-index: 3;
+            min-width: 230px;
+            padding: 4px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--card);
+            box-shadow: 0 14px 34px rgba(0, 0, 0, .5);
+        }
+
+        .md-menu[hidden] {
+            display: none;
+        }
+
+        .md-menu button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            padding: 8px 10px;
+            border: 0;
+            border-radius: 6px;
+            background: none;
+            color: var(--text);
+            font: inherit;
+            font-size: .82rem;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .md-menu button:hover,
+        .md-menu button:focus-visible {
+            background: var(--inset);
+            outline: none;
+        }
+
+        .md-menu button svg {
+            width: 15px;
+            height: 15px;
+            color: var(--sub);
+        }
+
+        .md-menu button[aria-checked="true"] {
+            color: var(--accent);
+        }
+
+        .md-menu button[aria-checked="true"] svg {
+            color: var(--accent);
+        }
+
         .md-stats {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
@@ -1557,6 +1655,14 @@
 
             .md-stats {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .md-cores {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .md-core-chart {
+                height: 56px;
             }
         }
 
@@ -2199,6 +2305,11 @@
             </div>
             <div class="md-legend" id="md-legend"></div>
             <div class="md-chart" id="md-chart"></div>
+            <div class="md-cores" id="md-cores" hidden></div>
+            <div class="md-menu" id="md-menu" role="menu" aria-label="CPU view" hidden>
+                <button type="button" role="menuitemradio" data-view="overall" id="md-view-overall"><i data-lucide="chart-line"></i>Overall: load + average speed</button>
+                <button type="button" role="menuitemradio" data-view="cores" id="md-view-cores"><i data-lucide="cpu"></i>Each core</button>
+            </div>
             <div class="md-stats" id="md-stats"></div>
             <div class="small md-note" id="md-note"></div>
         </div>
@@ -2235,7 +2346,7 @@
         </div>
     </dialog>
 
-    <script src="assets/dashboard.bundle.js?v=658dae35c0"></script>
+    <script src="assets/dashboard.bundle.js?v=2637f60cac"></script>
     <script>
         const $ = (id) => document.getElementById(id);
         let lastStatsOk = 0;
@@ -3234,6 +3345,7 @@
                 bat_pct: v(b.percentage), bat_ma: v(b.current_ma), bat_mv: v(b.voltage_mv),
                 bat_charging: b.status ? (b.status === "CHARGING" || b.status === "FULL" ? 1 : 0) : null,
                 disk_used: k.total ? k.total - k.free : null, disk_total: v(k.total),
+                cores: Array.isArray(s.cpu_cores) ? s.cpu_cores : null,
             });
             if (liveRows.length > LIVE_MAX) liveRows.shift();
         }
@@ -3270,7 +3382,7 @@
                     return [["Lowest load", num(l?.low, 2)], ["Average load", num(l?.avg, 2)], ["Highest load", num(p?.high ?? l?.high, 2)],
                         ["Avg core speed", pctTxt(c?.avg)], ["Top core speed", pctTxt(c?.high)]];
                 },
-                note: "Android hides real CPU usage from apps. Load counts tasks running or waiting (including waiting on storage, " +
+                note: "Right-click the chart (long-press on a phone) to see each core. Android hides real CPU usage from apps. Load counts tasks running or waiting (including waiting on storage, " +
                     "so about 4 can be normal here); core speed shows how hard the cores are pushed, because they only speed up when there is work.",
             },
             mem: {
@@ -3346,15 +3458,20 @@
         };
 
         let mdMetric = "cpu", mdTimer = null, mdError = "";
+        // CPU chart view: "overall" (load + average speed) or "cores" (one chart per core); chosen from the right-click menu.
+        let mdView = (() => { try { return localStorage.getItem("ae-md-cpu-view") === "cores" ? "cores" : "overall"; } catch (e) { return "overall"; } })();
+        const showCores = () => mdMetric === "cpu" && mdView === "cores";
         let mdRange = (() => { try { return localStorage.getItem("ae-md-range") || "1h"; } catch (e) { return "1h"; } })();
         const mdHistory = {}; // range -> { rows, bucket }
 
         async function loadMetricHistory() {
             if (mdRange === "live") { mdError = ""; return renderMetricDialog(); }
             const range = mdRange;
+            const withCores = showCores(); // per-core history is only fetched while that view is open
             try {
-                const h = await api(`/api/history?range=${range}`);
-                mdHistory[range] = { bucket: h.bucket_s, rows: h.rows.map((r) => Object.fromEntries(h.fields.map((f, i) => [f, r[i]]))) };
+                const h = await api(`/api/history?range=${range}${withCores ? "&cores=1" : ""}`);
+                mdHistory[range] = { bucket: h.bucket_s, rows: h.rows.map((r) => Object.fromEntries(h.fields.map((f, i) => [f, r[i]]))),
+                    cores: h.cores || null };
                 mdError = "";
             } catch (e) {
                 mdError = "Couldn't load the history. Is the API updated?";
@@ -3369,6 +3486,51 @@
             const last = liveRows[liveRows.length - 1];
             if (last && (!rows.length || last.ts > rows[rows.length - 1].ts)) rows.push(last); // end on the latest reading
             return { rows, bucket: h.bucket };
+        }
+
+        // Per-core series: [[ms, %]] for each core, with a break where readings are missing.
+        function coreSeries(bucket) {
+            let points;
+            if (mdRange === "live") points = liveRows.filter((r) => r.cores).map((r) => [r.ts, r.cores]);
+            else {
+                points = ((mdHistory[mdRange] || {}).cores || []).slice();
+                const last = liveRows[liveRows.length - 1];
+                if (last && last.cores && (!points.length || last.ts > points[points.length - 1][0])) points.push([last.ts, last.cores]);
+            }
+            const n = Math.max(0, ...points.map((p) => p[1].length));
+            return Array.from({ length: n }, (_, c) => {
+                const data = [];
+                points.forEach(([ts, vals], i) => {
+                    if (i && ts - points[i - 1][0] > Math.max(bucket * 3, 30)) data.push([(points[i - 1][0] + 1) * 1000, null]);
+                    data.push([ts * 1000, vals[c] ?? null]);
+                });
+                return { data };
+            });
+        }
+
+        function renderCores(bucket) {
+            const cores = coreSeries(bucket);
+            const box = $("md-cores");
+            if (box.children.length !== cores.length) {
+                box.replaceChildren(...cores.map((_, c) => {
+                    const card = el("div", { class: "md-core" });
+                    const head = el("div", { class: "md-core-head" });
+                    head.append(el("span", {}, `Core ${c}`), el("b"));
+                    card.append(head, el("div", { class: "md-core-chart" }), el("div", { class: "md-core-avg" }));
+                    return card;
+                }));
+            }
+            cores.forEach((core, c) => {
+                const vals = core.data.map((p) => p[1]).filter((v) => v != null);
+                const now = core.data.length ? core.data[core.data.length - 1][1] : null;
+                const card = box.children[c];
+                card.querySelector("b").textContent = now == null ? (core.data.length ? "off" : "–") : `${Math.round(now)}%`;
+                card.querySelector(".md-core-avg").textContent = vals.length ?
+                    `avg ${Math.round(vals.reduce((a, b) => a + b, 0) / vals.length)}% · top ${Math.round(Math.max(...vals))}%` : "no readings yet";
+            });
+            if (!cores.length) box.replaceChildren(el("div", { class: "small" }, mdError ||
+                (mdRange === "live" ? "Collecting live readings…" : "No per-core readings for this range yet (they started with this update).")));
+            window.dashboardChart?.updateCores(cores);
         }
 
         function renderMetricDialog() {
@@ -3395,6 +3557,11 @@
                 item.append(sw, document.createTextNode(s.name));
                 return item;
             }));
+            const cores = showCores();
+            $("md-chart").hidden = cores;
+            $("md-legend").hidden = cores;
+            $("md-cores").hidden = !cores;
+            if (cores) renderCores(bucket);
             // A gap in the readings (API restarted, phone off) becomes a break in the line, not a straight join.
             const data = (key) => {
                 const out = [];
@@ -3404,7 +3571,7 @@
                 });
                 return out;
             };
-            window.dashboardChart?.updateMetric({
+            if (!cores) window.dashboardChart?.updateMetric({
                 series: def.series.map((s) => ({ ...s, data: data(s.key) })),
                 axes: def.axes(rows, latest),
                 marks: def.marks ? def.marks() : [],
@@ -3440,7 +3607,7 @@
         }
         $("md-tabs").addEventListener("click", (e) => {
             const tab = e.target.closest("button");
-            if (tab) { mdMetric = tab.dataset.metric; renderMetricDialog(); }
+            if (tab) { mdMetric = tab.dataset.metric; hideMetricMenu(); renderMetricDialog(); if (showCores()) loadMetricHistory(); }
         });
         $("md-ranges").addEventListener("click", (e) => {
             const b = e.target.closest("button");
@@ -3450,10 +3617,41 @@
             renderMetricDialog();
             loadMetricHistory();
         });
+        // Right-click (long-press on phones) on the CPU chart: switch between the overall chart and each core.
+        function hideMetricMenu() { $("md-menu").hidden = true; }
+        function showMetricMenu(e) {
+            if (mdMetric !== "cpu") return; // other readings keep the browser's own menu
+            e.preventDefault();
+            const menu = $("md-menu"), box = $("metric-dialog").getBoundingClientRect();
+            for (const b of menu.children) b.setAttribute("aria-checked", String(b.dataset.view === mdView));
+            menu.hidden = false;
+            const x = Math.min(e.clientX - box.left, box.width - menu.offsetWidth - 8);
+            const y = Math.min(e.clientY - box.top, box.height - menu.offsetHeight - 8);
+            menu.style.left = Math.max(8, x) + "px";
+            menu.style.top = Math.max(8, y) + "px";
+            menu.querySelector('[aria-checked="true"]').focus();
+        }
+        $("md-chart").addEventListener("contextmenu", showMetricMenu);
+        $("md-cores").addEventListener("contextmenu", showMetricMenu);
+        $("md-menu").addEventListener("click", (e) => {
+            const b = e.target.closest("button");
+            if (!b) return;
+            hideMetricMenu();
+            if (b.dataset.view === mdView) return;
+            mdView = b.dataset.view;
+            try { localStorage.setItem("ae-md-cpu-view", mdView); } catch (err) { /* storage blocked */ }
+            renderMetricDialog();
+            loadMetricHistory();
+        });
+        $("metric-dialog").addEventListener("pointerdown", (e) => { if (!$("md-menu").contains(e.target)) hideMetricMenu(); });
+        $("metric-dialog").addEventListener("cancel", (e) => { // Esc closes the menu first, then the dialog
+            if (!$("md-menu").hidden) { e.preventDefault(); hideMetricMenu(); }
+        });
         $("md-close").addEventListener("click", () => $("metric-dialog").close());
         $("metric-dialog").addEventListener("click", (e) => { if (e.target === e.currentTarget) e.currentTarget.close(); });
         $("metric-dialog").addEventListener("close", () => {
             clearInterval(mdTimer);
+            hideMetricMenu();
             document.body.classList.remove("pd-lock");
         });
 

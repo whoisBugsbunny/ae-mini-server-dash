@@ -682,4 +682,43 @@ function updateMetric(spec) {
     }, { notMerge: true });
 }
 
-window.dashboardChart = { init, update, updateMarket, updateEquity, updateMetric };
+// Per-core view of the CPU dialog: one small chart per core, 0–100% of that core's top speed.
+// cores = [{ data: [[ms, % or null]] }]; the cards around the charts are made by the page (#md-cores > .md-core).
+const coreCharts = [];
+function updateCores(cores) {
+    const holders = document.querySelectorAll("#md-cores .md-core-chart");
+    const accent = themeColor("--accent");
+    const border = themeColor("--border");
+    holders.forEach((element, i) => {
+        let chart = coreCharts[i];
+        if (!chart || chart.getDom() !== element) {
+            if (chart) chart.dispose();
+            chart = coreCharts[i] = echarts.init(element, null, { renderer: "canvas" });
+            if ("ResizeObserver" in window) new ResizeObserver(() => chart.resize()).observe(element);
+        }
+        const data = (cores[i] && cores[i].data) || [];
+        chart.setOption({
+            animation: false,
+            grid: { left: 0, right: 0, top: 2, bottom: 0 },
+            tooltip: {
+                trigger: "axis",
+                backgroundColor: themeColor("--card"),
+                borderColor: border,
+                textStyle: { color: themeColor("--text"), fontSize: 11 },
+                formatter: (p) => p[0] ? `${new Date(p[0].value[0]).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}: <b>${p[0].value[1] == null ? "off" : Math.round(p[0].value[1]) + "%"}</b>` : "",
+            },
+            xAxis: { type: "time", show: false },
+            yAxis: { type: "value", min: 0, max: 100, show: true, axisLabel: { show: false }, splitNumber: 2,
+                splitLine: { lineStyle: { color: border, type: "dashed" } } },
+            series: [{
+                type: "line", showSymbol: false, connectNulls: false, data,
+                lineStyle: { color: accent, width: 1.5 }, itemStyle: { color: accent },
+                areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                    { offset: 0, color: accent + "50" }, { offset: 1, color: accent + "05" }]) },
+            }],
+        }, { notMerge: true });
+    });
+    coreCharts.splice(holders.length).forEach((c) => c.dispose());
+}
+
+window.dashboardChart = { init, update, updateMarket, updateEquity, updateMetric, updateCores };
